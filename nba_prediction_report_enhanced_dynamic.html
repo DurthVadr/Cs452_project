@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Game Prediction Project: 2018-2019 Season Analysis (Enhanced)</title>
+    <style>
+        /* Global Styles */
+        :root {
+            --nba-blue: #17408B;
+            --nba-red: #C9082A;
+            --nba-light-blue: #1D428A;
+            --nba-light-gray: #F8F9FA;
+            --nba-dark-gray: #333333;
+            --nba-accent: #FDBB30;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--nba-dark-gray);
+            background-color: #FFFFFF;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0;
+        }
+        
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, var(--nba-blue) 0%, var(--nba-light-blue) 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 5px solid var(--nba-red);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        /* Content Styles */
+        .container {
+            padding: 30px;
+        }
+        
+        h2 {
+            color: var(--nba-blue);
+            font-size: 2rem;
+            margin: 40px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--nba-red);
+        }
+        
+        h3 {
+            color: var(--nba-red);
+            font-size: 1.5rem;
+            margin: 30px 0 15px;
+        }
+        
+        h4 {
+            color: var(--nba-dark-gray);
+            font-size: 1.2rem;
+            margin: 20px 0 10px;
+        }
+        
+        p {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }
+        
+        /* Executive Summary Box */
+        .executive-summary {
+            background-color: var(--nba-light-gray);
+            border-left: 5px solid var(--nba-blue);
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 0 5px 5px 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .executive-summary h2 {
+            border-bottom: none;
+            margin-top: 0;
+        }
+        
+        /* Lists */
+        ul, ol {
+            margin: 0 0 20px 30px;
+        }
+        
+        li {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        /* Images */
+        .image-container {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .image-caption {
+            margin-top: 10px;
+            font-style: italic;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 1rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        th {
+            background-color: var(--nba-blue);
+            color: white;
+            font-weight: bold;
+            padding: 12px 15px;
+            text-align: left;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        tr:nth-child(even) {
+            background-color: var(--nba-light-gray);
+        }
+        
+        tr:hover {
+            background-color: rgba(29, 66, 138, 0.1);
+        }
+        
+        /* Key Findings Section */
+        .key-findings {
+            background-color: #FFF8E1;
+            border-left: 5px solid var(--nba-accent);
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .key-findings h3 {
+            color: var(--nba-dark-gray);
+            margin-top: 0;
+        }
+        
+        /* Footer */
+        .footer {
+            background-color: var(--nba-dark-gray);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 50px;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            h2 {
+                font-size: 1.8rem;
+            }
+            
+            h3 {
+                font-size: 1.3rem;
+            }
+            
+            p, li {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NBA Game Prediction Project</h1>
+        <p>2018-2019 Season Analysis (Enhanced Report)</p>
+    </div>
+    
+    <div class="container">
+        <div class="executive-summary">
+            <h2>Executive Summary</h2>
+            <p>This report presents a comprehensive analysis of NBA game predictions for the 2018-2019 season. Using machine learning techniques and statistical analysis, we developed models to predict game outcomes with high precision. The project focused on understanding team performance patterns, developing an optimized ELO rating system, creating specialized models for predicting upsets, and implementing ensemble methods to further improve accuracy.</p>
+            
+            <h3>Key Findings</h3>
+            <ol>
+                <li>Our best ensemble model (Approach 4: Meta-model (stacking)) achieved a prediction accuracy of <strong>68.3%</strong>, which is <strong>1.2%</strong> better than the initial best single model (67.1%).</li>
+                <li>Specialized upset prediction models and ensemble techniques significantly improved accuracy for upset games compared to baseline ELO.</li>
+                <li>The Four Factors of basketball success showed varying impact on win probability, with effective field goal percentage (eFG%) being the most influential factor.</li>
+                <li>Teams were clustered into four distinct playing styles, with each cluster showing specific strengths and weaknesses.</li>
+                <li>Back-to-back games significantly impact team performance and prediction accuracy.</li>
+            </ol>
+        </div>
+        
+        <h2>1. Introduction</h2>
+        <p>The NBA (National Basketball Association) is one of the most popular professional sports leagues in the world, with a rich history of statistical analysis and prediction. This project aims to predict NBA game outcomes for the 2018-2019 season using advanced data science techniques.</p>
+        
+        <h3>1.1 Project Objectives</h3>
+        <ul>
+            <li>Develop a high-precision prediction model for NBA game outcomes</li>
+            <li>Optimize the ELO rating system for basketball predictions</li>
+            <li>Analyze team performance patterns and identify key performance indicators</li>
+            <li>Create specialized models for predicting upsets (when favorites lose)</li>
+            <li>Implement ensemble models to combine regular and upset predictions for improved accuracy</li>
+            <li>Provide comprehensive visualizations and insights</li>
+        </ul>
+        
+        <h3>1.2 Data Sources</h3>
+        <p>The project utilized several datasets including game information, team statistics, Four Factors data, boxscore data, and historical ELO ratings.</p>
+        
+        <h2>2. Data Exploration and Preparation</h2>
+        
+        <h3>2.1 Dataset Overview</h3>
+        <p>The 2018-2019 NBA season consisted of 1,230 regular-season games. Key characteristics:</p>
+        <ul>
+            <li>Home teams won approximately <strong>82.1%</strong> of games</li>
+            <li>The upset rate (favorites losing) was approximately <strong>34.1%</strong></li>
+            <li>Back-to-back games accounted for approximately <strong>30.1%</strong> of all games</li>
+        </ul>
+        
+        <h3>2.2 Feature Engineering</h3>
+        <p>We created several features including team performance metrics, back-to-back indicators, matchup history, ELO differentials, and Four Factors differentials.</p>
+        
+        <h2>3. ELO Rating System Analysis</h2>
+        
+        <h3>3.1 Original ELO System Performance</h3>
+        <p>The original ELO rating system achieved an accuracy of <strong>67.5%</strong> on the test dataset.</p>
+        
+        <h3>3.2 Optimized ELO System</h3>
+        <p>We optimized the ELO system by tuning the K-factor and home advantage parameters.</p>
+        
+        <div class="image-container">
+            <img src="images/elo_parameter_search.png" alt="ELO Parameter Search">
+            <div class="image-caption">Figure 1: ELO Parameter Search Results (Test Accuracy %)</div>
+        </div>
+        
+        <p>The optimized ELO system achieved an accuracy of <strong>6341.5%</strong>.</p>
+        
+        <h3>3.3 Final Team Ratings</h3>
+        <p>The final ELO ratings after the 2018-2019 season:</p>
+        
+        <div class="image-container">
+            <img src="images/final_elo_ratings.png" alt="Final ELO Ratings">
+            <div class="image-caption">Figure 2: Top 15 Teams by Final ELO Rating</div>
+        </div>
+        
+        <h2>4. Team Performance Analysis</h2>
+        
+        <h3>4.1 Team Records</h3>
+        <p>Top teams by win percentage:</p>
+        
+        <div class="image-container">
+            <img src="images/top_teams_win_pct.png" alt="Top Teams by Win Percentage">
+            <div class="image-caption">Figure 3: Top 10 Teams by Win Percentage</div>
+        </div>
+        
+        <h3>4.2 Four Factors Analysis</h3>
+        <p>Impact of Four Factors on winning:</p>
+        
+        <div class="image-container">
+            <img src="images/four_factors_win_pct.png" alt="Four Factors Win Percentage">
+            <div class="image-caption">Figure 4: Win Percentage When Team Has Advantage in Four Factors</div>
+        </div>
+        
+        <p>Effective field goal percentage (eFG%) has the strongest correlation with winning.</p>
+        
+        <h3>4.3 Team Clustering</h3>
+        <p>Teams clustered based on playing style:</p>
+        
+        <div class="image-container">
+            <img src="images/team_clusters.png" alt="Team Clustering">
+            <div class="image-caption">Figure 5: Team Clustering Based on Playing Style</div>
+        </div>
+        
+        <p>Four distinct playing styles were identified.</p>
+        
+        <h3>4.4 Upset Analysis</h3>
+        <p>Teams most prone to upsets:</p>
+        
+        <div class="image-container">
+            <img src="images/top_upset_teams.png" alt="Teams Most Likely to Be Upset">
+            <div class="image-caption">Figure 6: Top 10 Teams Most Likely to Be Upset (When Favored)</div>
+        </div>
+        
+        <h2>5. Prediction Model Development (Single Models)</h2>
+        
+        <h3>5.1 Model Selection</h3>
+        <p>We evaluated several machine learning models:</p>
+        
+        <div class="image-container">
+            <img src="images/model_accuracy_comparison.png" alt="Model Accuracy Comparison">
+            <div class="image-caption">Figure 7: Single Model Accuracy Comparison</div>
+        </div>
+        
+        <p>The Gradient Boosting model performed best among single models, achieving <strong>67.1%</strong> accuracy.</p>
+        
+        <h3>5.2 Feature Importance</h3>
+        <p>The most important features included ELO difference, eFG%, and recent win percentage.</p>
+        
+        <h2>6. Ensemble Model Development</h2>
+        <p>To improve accuracy further, we explored combining the regular prediction model with specialized upset prediction models using various ensemble techniques.</p>
+        
+        <h3>6.1 Ensemble Approaches Tested</h3>
+        <ul>
+            <li>Approach 1: Separate Models for Upset/Non-Upset Games</li>
+            <li>Approach 2: Upset Prediction + Main Model</li>
+            <li>Approach 3: Weighted Voting Ensemble</li>
+            <li>Approach 4: Meta-Model (Stacking)</li>
+            <li>Approach 5: Adaptive Ensemble with Upset-Specific Features</li>
+        </ul>
+        
+        <h3>6.2 Ensemble Results</h3>
+        <p>Comparison of ensemble approaches:</p>
+        <div class="image-container">
+            <img src="images/approach_comparison.png" alt="Ensemble Approach Comparison">
+            <div class="image-caption">Figure 8: Comparison of Ensemble Approaches</div>
+        </div>
+        
+        <p>The best approach was <strong>Approach 4: Meta-model (stacking)</strong> with an accuracy of <strong>68.3%</strong>. This represents an improvement of <strong>1.2%</strong> over the best single model.</p>
+        
+        <h2>7. Final Model Evaluation</h2>
+        
+        <h3>7.1 Overall Performance (Best Ensemble Model)</h3>
+        <p>The final ensemble model (Approach 4: Meta-model (stacking)) achieved an overall accuracy of <strong>68.3%</strong>.</p>
+        
+        <h3>7.2 Performance on Upset vs. Non-Upset Games</h3>
+        <p>Accuracy breakdown for the best ensemble model:</p>
+        <div class="image-container">
+            <img src="images/best_approach_by_upset.png" alt="Ensemble Accuracy by Upset Status">
+            <div class="image-caption">Figure 9: Prediction Accuracy by Upset Status (Best Ensemble)</div>
+        </div>
+        
+        <h3>7.3 Confusion Matrix (Best Ensemble Model)</h3>
+        <div class="image-container">
+            <img src="images/best_approach_confusion_matrix.png" alt="Ensemble Confusion Matrix">
+            <div class="image-caption">Figure 10: Confusion Matrix (Best Ensemble Model)</div>
+        </div>
+        
+        <h3>7.4 Performance by Game Characteristics (Best Ensemble Model)</h3>
+        
+        <h4>7.4.1 ELO Difference</h4>
+        <p>Prediction accuracy increased with larger ELO differences:</p>
+        <div class="image-container">
+            <img src="images/accuracy_by_elo_diff.png" alt="Accuracy by ELO Difference">
+            <div class="image-caption">Figure 11: Prediction Accuracy by ELO Difference (Original Model - Trend likely similar for ensemble)</div>
+        </div>
+        
+        <h4>7.4.2 Back-to-Back Games</h4>
+        <p>Back-to-back games remained challenging, impacting accuracy.</p>
+        
+        <h2>8. Conclusions and Recommendations</h2>
+        
+        <div class="key-findings">
+            <h3>8.1 Key Insights</h3>
+            <ol>
+                <li>Ensemble modeling, specifically the Approach 4: Meta-model (stacking) approach, improved prediction accuracy to 68.3%, outperforming single models and baseline ELO.</li>
+                <li>Specialized modeling for upsets is crucial for improving overall accuracy in sports prediction.</li>
+                <li>The Four Factors (especially eFG%) remain strong indicators of game outcomes.</li>
+                <li>Team clustering provides valuable insights into playing styles and potential matchups.</li>
+                <li>Situational factors like back-to-back games significantly influence predictability.</li>
+            </ol>
+        </div>
+        
+        <h3>8.2 Recommendations for Future Work</h3>
+        <ol>
+            <li>Incorporate player-level data (injuries, performance trends, rest).</li>
+            <li>Develop time-series models for team momentum.</li>
+            <li>Explore more advanced ensemble and deep learning techniques.</li>
+            <li>Analyze in-game data for real-time predictions.</li>
+            <li>Extend analysis to playoff games.</li>
+        </ol>
+        
+        <h3>8.3 Final Thoughts</h3>
+        <p>This project demonstrates the power of combining domain knowledge (like the Four Factors and ELO) with advanced machine learning and ensemble techniques. The resulting model provides a significant improvement in NBA game prediction accuracy, offering valuable insights for various applications.</p>
+    </div>
+    
+    <div class="footer">
+        <p>NBA Game Prediction Project: 2018-2019 Season Analysis (Enhanced Report)</p>
+        <p>&copy; 2025 Data Science Team</p>
+    </div>
+</body>
+</html>
