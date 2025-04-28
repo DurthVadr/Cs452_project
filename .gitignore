@@ -11,3 +11,11 @@ node_modules/
 package-lock.json
 package.json
 data/
+ensemble_model/
+elo_analysis/
+evaluation/
+images/
+models/
+plots/
+processed_data/
+team_analysis/
