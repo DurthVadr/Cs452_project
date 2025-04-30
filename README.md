@@ -8,7 +8,7 @@ To run this project locally, you need the following data files placed in a direc
 
 - `game_info.csv`: Contains basic information about each game.
 - `team_stats.csv`: Contains team statistics for each game.
-- `nbaallelo.csv`: Contains historical ELO ratings for NBA teams.
+- `nbaallelo.csv`: Contains historical ELO ratings for NBA teams (NOT USED ANYMORE).
 - `team_full_10.csv`, `team_full_20.csv`, `team_full_30.csv`: Contain team boxscore data averaged over the last 10, 20, and 30 games.
 - `team_factor_10.csv`, `team_factor_20.csv`, `team_factor_30.csv`: Contain team Four Factors data averaged over the last 10, 20, and 30 games.
 
@@ -43,7 +43,7 @@ Run the Python scripts in the following order from the project directory (` `):
     ```bash
     python3 elo_analysis.py
     ```
-    *   **Input**: `nbaallelo.csv`, `game_info.csv`.
+    *   **Input**: `nbaallelo.csv` (NOT USED ANYMORE), `game_info.csv`.
     *   **Output**: ELO analysis results and visualizations in ` elo_analysis/`.
 
 3.  **Team Performance Analysis**:

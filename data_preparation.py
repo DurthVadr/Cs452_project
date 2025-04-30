@@ -18,7 +18,6 @@ team_factor_30 = pd.read_csv('data/team_factor_30.csv', index_col=0)
 team_full_10 = pd.read_csv('data/team_full_10.csv', index_col=0)
 team_full_20 = pd.read_csv('data/team_full_20.csv', index_col=0)
 team_full_30 = pd.read_csv('data/team_full_30.csv', index_col=0)
-nbaallelo = pd.read_csv('data/nbaallelo.csv')
 
 # Filter for 2018-2019 season
 season_2018_2019 = 1819

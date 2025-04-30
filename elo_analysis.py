@@ -132,7 +132,7 @@ class EloSystem:
 
     def predict_winner(self, team_a, team_b, team_a_home=False):
         expected_a = self.expected_result(team_a, team_b, team_a_home)
-        return 1 if expected_a > 0.5 else 0
+        return 0 if expected_a > 0.5 else 1
 
 # Function to evaluate ELO system with different parameters
 def evaluate_elo_system(train_data, test_data, k_factor, home_advantage):
@@ -150,7 +150,7 @@ def evaluate_elo_system(train_data, test_data, k_factor, home_advantage):
         train_predictions.append(prediction)
 
         # Update ratings based on actual result
-        actual_result = 0 if game['result'] == 0 else 1  # 0 for away win, 1 for home win
+        actual_result = 1 if game['result'] == 0 else 0  # 0 for away win, 1 for home win
         elo_system.update_ratings(away_team, home_team, actual_result, team_a_home=False)
 
     # Evaluate on test data
@@ -164,7 +164,7 @@ def evaluate_elo_system(train_data, test_data, k_factor, home_advantage):
         test_predictions.append(prediction)
 
         # Update ratings based on actual result
-        actual_result = 0 if game['result'] == 0 else 1  # 0 for away win, 1 for home win
+        actual_result = 1 if game['result'] == 0 else 0  # 0 for away win, 1 for home win
         elo_system.update_ratings(away_team, home_team, actual_result, team_a_home=False)
 
     # Calculate accuracy

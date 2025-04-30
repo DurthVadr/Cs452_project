@@ -42,11 +42,6 @@
 - Columns: game_id, season, date, away_team, away_score, home_team, home_score, result, a_FG, a_FGA, a_FGp, a_3P, a_3PA, a_3Pp, a_FT, a_FTA, a_FTp, a_ORB, a_DRB, a_TRB, a_AST, a_STL, a_BLK, a_TOV, a_PF, a_PTS, a_TSp, a_eFGp, a_3PAr, a_FTr, a_ORBp, a_DRBp, a_TRBp, a_ASTp, a_STLp, a_BLKp, a_TOVp, h_FG, h_FGA, h_FGp, h_3P, h_3PA, h_3Pp, h_FT, h_FTA, h_FTp, h_ORB, h_DRB, h_TRB, h_AST, h_STL, h_BLK, h_TOV, h_PF, h_PTS, h_TSp, h_eFGp, h_3PAr, h_FTr, h_ORBp, h_DRBp, h_TRBp, h_ASTp, h_STLp, h_BLKp, h_TOVp
 - Missing values: 899
 
-### nbaallelo
-- Shape: (126314, 24)
-- Columns: Unnamed: 0, gameorder, game_id, lg_id, _iscopy, year_id, date_game, seasongame, is_playoffs, team_id, fran_id, pts, elo_i, elo_n, win_equiv, opp_id, opp_fran, opp_pts, opp_elo_i, opp_elo_n, game_location, game_result, forecast, notes
-- Missing values: 120890
-
 ## 2018-2019 Season Analysis
 
 - Number of games: 1230
