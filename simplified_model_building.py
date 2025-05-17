@@ -24,15 +24,11 @@ combined_data = pd.read_csv('processed_data/combined_data.csv', index_col=0)
 train_data = pd.read_csv('processed_data/train_data.csv', index_col=0)
 test_data = pd.read_csv('processed_data/test_data.csv', index_col=0)
 
-# Define features for prediction model
-features = [
-    'elo_diff',
-    'away_last_n_win_pct', 'home_last_n_win_pct',
-    'away_back_to_back', 'home_back_to_back',
-    'away_vs_home_win_pct',
-    'a_eFGp', 'a_FTr', 'a_ORBp', 'a_TOVp',
-    'h_eFGp', 'h_FTr', 'h_ORBp', 'h_TOVp'
-]
+# Load feature names from file
+with open('processed_data/feature_names.txt', 'r') as f:
+    features = [line.strip() for line in f.readlines() if line.strip()]  # Skip empty lines
+
+print(f"Using {len(features)} features for model building.")
 
 # Create X and y for training and testing
 X_train = train_data[features]

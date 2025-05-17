@@ -1,26 +1,44 @@
+"""
+Data exploration script for the NBA prediction project.
+This script analyzes the raw data and generates summary statistics and visualizations.
+"""
+
+import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from typing import Dict, Any
+
+# Import utility modules
+from utils.logging_config import get_script_logger
+from utils.common import ensure_directory_exists, set_plot_style
+
+# Set up logger
+logger = get_script_logger(__file__)
+logger.info("Starting data exploration")
 
 # Set plot style
-plt.style.use('ggplot')
-sns.set_theme(font_scale=1.2)
-
-# Load the datasets
-game_info = pd.read_csv('data/game_info.csv', index_col=0)
-team_stats = pd.read_csv('data/team_stats.csv', index_col=0)
-team_factor_10 = pd.read_csv('data/team_factor_10.csv', index_col=0)
-team_factor_20 = pd.read_csv('data/team_factor_20.csv', index_col=0)
-team_factor_30 = pd.read_csv('data/team_factor_30.csv', index_col=0)
-team_full_10 = pd.read_csv('data/team_full_10.csv', index_col=0)
-team_full_20 = pd.read_csv('data/team_full_20.csv', index_col=0)
-team_full_30 = pd.read_csv('data/team_full_30.csv', index_col=0)
+set_plot_style()
 
 # Create output directory for plots
-import os
-if not os.path.exists('plots'):
-    os.makedirs('plots')
+ensure_directory_exists('plots')
+
+# Load the datasets
+logger.info("Loading datasets")
+try:
+    game_info = pd.read_csv('data/game_info.csv', index_col=0)
+    team_stats = pd.read_csv('data/team_stats.csv', index_col=0)
+    team_factor_10 = pd.read_csv('data/team_factor_10.csv', index_col=0)
+    team_factor_20 = pd.read_csv('data/team_factor_20.csv', index_col=0)
+    team_factor_30 = pd.read_csv('data/team_factor_30.csv', index_col=0)
+    team_full_10 = pd.read_csv('data/team_full_10.csv', index_col=0)
+    team_full_20 = pd.read_csv('data/team_full_20.csv', index_col=0)
+    team_full_30 = pd.read_csv('data/team_full_30.csv', index_col=0)
+    logger.info("Successfully loaded all datasets")
+except FileNotFoundError as e:
+    logger.error(f"Error loading data files: {e}")
+    raise
 
 # Basic information about each dataset
 datasets = {
@@ -46,11 +64,11 @@ with open('data_summary.md', 'w') as f:
         f.write(f"- Missing values: {df.isna().sum().sum()}\n\n")
 
 # Analyze game_info dataset
-print("Analyzing game_info dataset...")
+logger.info("Analyzing game_info dataset")
 
 # Check for 2018-2019 season data
 seasons = game_info['season'].unique()
-print(f"Available seasons: {seasons}")
+logger.info(f"Available seasons: {seasons}")
 
 # Filter for 2018-2019 season if available (typically coded as 1819)
 season_2018_2019 = None
@@ -61,7 +79,8 @@ for season in seasons:
 
 if season_2018_2019:
     games_2018_2019 = game_info[game_info['season'] == season_2018_2019]
-    print(f"Number of games in 2018-2019 season: {len(games_2018_2019)}")
+    logger.info(f"Found 2018-2019 season with {len(games_2018_2019)} games")
+    logger.info(f"Date range: {games_2018_2019['date'].min()} to {games_2018_2019['date'].max()}")
 
     # Add to summary report
     with open('data_summary.md', 'a') as f:
@@ -69,9 +88,10 @@ if season_2018_2019:
         f.write(f"- Number of games: {len(games_2018_2019)}\n")
         f.write(f"- Date range: {games_2018_2019['date'].min()} to {games_2018_2019['date'].max()}\n\n")
 else:
-    print("2018-2019 season data not found. Using most recent season available.")
+    logger.warning("2018-2019 season data not found. Using most recent season available.")
     most_recent_season = max(seasons)
     games_most_recent = game_info[game_info['season'] == most_recent_season]
+    logger.info(f"Using season {most_recent_season} with {len(games_most_recent)} games")
 
     # Add to summary report
     with open('data_summary.md', 'a') as f:
@@ -104,7 +124,7 @@ with open('data_summary.md', 'a') as f:
     f.write(f"- Away team win percentage: {away_win_pct:.1f}%\n\n")
 
 # Analyze ELO ratings
-print("Analyzing ELO ratings...")
+logger.info("Analyzing ELO ratings")
 
 # Distribution of initial ELO ratings
 plt.figure(figsize=(12, 6))
@@ -115,10 +135,12 @@ plt.xlabel('ELO Rating')
 plt.ylabel('Frequency')
 plt.legend()
 plt.savefig('plots/elo_distribution.png')
+logger.info("Saved ELO distribution plot to plots/elo_distribution.png")
 
 # ELO prediction accuracy
 elo_correct = game_info[game_info['elo_pred'] == game_info['result']]
 elo_accuracy = len(elo_correct) / len(game_info) * 100
+logger.info(f"ELO prediction accuracy: {elo_accuracy:.2f}%")
 
 # Add to summary report
 with open('data_summary.md', 'a') as f:
@@ -128,13 +150,14 @@ with open('data_summary.md', 'a') as f:
     f.write(f"- Average away team initial ELO: {game_info['away_elo_i'].mean():.1f}\n\n")
 
 # Analyze upsets
-print("Analyzing upsets...")
+logger.info("Analyzing upsets")
 
 # Define an upset as when the team with lower ELO rating wins
 game_info['favorite'] = np.where(game_info['home_elo_i'] > game_info['away_elo_i'], 1, 0)
 game_info['upset'] = np.where(game_info['favorite'] != game_info['result'], 1, 0)
 
 upset_rate = game_info['upset'].mean() * 100
+logger.info(f"Overall upset rate: {upset_rate:.2f}%")
 
 # Add to summary report
 with open('data_summary.md', 'a') as f:
@@ -157,12 +180,13 @@ plt.tight_layout()
 plt.savefig('plots/upset_rate_by_season.png')
 
 # Analyze Four Factors
-print("Analyzing Four Factors...")
+logger.info("Analyzing Four Factors")
 
 # Check for missing values in team_factor datasets
 missing_factor_10 = team_factor_10.isna().sum().sum()
 missing_factor_20 = team_factor_20.isna().sum().sum()
 missing_factor_30 = team_factor_30.isna().sum().sum()
+logger.info(f"Missing values in Four Factors data: 10-game={missing_factor_10}, 20-game={missing_factor_20}, 30-game={missing_factor_30}")
 
 # Add to summary report
 with open('data_summary.md', 'a') as f:
@@ -172,13 +196,14 @@ with open('data_summary.md', 'a') as f:
     f.write(f"- Missing values in 30-game average: {missing_factor_30}\n\n")
 
 # Analyze team statistics
-print("Analyzing team statistics...")
+logger.info("Analyzing team statistics")
 
 # Calculate average team statistics
 avg_stats = team_stats.groupby('team').mean()
 
 # Top 5 teams by points scored
 top_scoring_teams = avg_stats.sort_values('PTS', ascending=False).head(5)
+logger.info(f"Top 5 scoring teams: {', '.join(top_scoring_teams.index)}")
 
 # Add to summary report
 with open('data_summary.md', 'a') as f:
@@ -186,4 +211,4 @@ with open('data_summary.md', 'a') as f:
     f.write(f"- Number of unique teams: {team_stats['team'].nunique()}\n")
     f.write(f"- Top 5 scoring teams: {', '.join(top_scoring_teams.index)}\n\n")
 
-print("Data exploration completed. Results saved to data_summary.md")
+logger.info("Data exploration completed. Results saved to data_summary.md")

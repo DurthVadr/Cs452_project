@@ -22,25 +22,89 @@ test_data = pd.read_csv('processed_data/test_data.csv', index_col=0)
 
 # Load feature names
 with open('processed_data/feature_names.txt', 'r') as f:
-    feature_names = [line.strip() for line in f.readlines()]
+    feature_names = [line.strip() for line in f.readlines() if line.strip()]  # Skip empty lines
 
-# Load X and y data
-X_train = np.load('processed_data/X_train.npy')
-y_train = np.load('processed_data/y_train.npy')
-X_test = np.load('processed_data/X_test.npy')
-y_test = np.load('processed_data/y_test.npy')
+# Create X and y data from the train and test dataframes
+X_train = train_data[feature_names].values
+y_train = train_data['result'].values
+X_test = test_data[feature_names].values
+y_test = test_data['result'].values
 
-# Load models
+# Save the new X and y data
+np.save('processed_data/X_train.npy', X_train)
+np.save('processed_data/y_train.npy', y_train)
+np.save('processed_data/X_test.npy', X_test)
+np.save('processed_data/y_test.npy', y_test)
+
+print(f"Using {len(feature_names)} features for model evaluation.")
+
+# Load or train models
 print("Loading models...")
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.preprocessing import StandardScaler
+
+# Function to check if model needs retraining
+def check_model_features(model, expected_features):
+    """Check if model was trained with the expected number of features"""
+    if hasattr(model, 'n_features_in_'):
+        return model.n_features_in_ == expected_features
+    elif hasattr(model, 'coef_') and len(model.coef_.shape) > 1:
+        return model.coef_.shape[1] == expected_features
+    else:
+        # If we can't determine, assume it needs retraining
+        return False
+
+# Scale features for training
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
 try:
     # Try to load the best models from the full model building script
     best_models = {}
+    models_to_retrain = []
+
     for model_name in ['random_forest_best.pkl', 'logistic_regression_best.pkl', 'gradient_boosting_best.pkl']:
         if os.path.exists(f'models/{model_name}'):
             model = joblib.load(f'models/{model_name}')
-            best_models[model_name.replace('_best.pkl', '').replace('_', ' ').title()] = model
+            display_name = model_name.replace('_best.pkl', '').replace('_', ' ').title()
 
-    # Load upset models
+            # Check if model needs retraining due to feature count mismatch
+            if check_model_features(model, len(feature_names)):
+                best_models[display_name] = model
+                print(f"Loaded {display_name} model successfully.")
+            else:
+                print(f"{display_name} model has feature count mismatch. Will retrain.")
+                models_to_retrain.append(display_name)
+
+    # Retrain models if needed
+    if models_to_retrain:
+        print(f"Retraining models with new features: {', '.join(models_to_retrain)}")
+
+        if 'Random Forest' in models_to_retrain:
+            rf_model = RandomForestClassifier(n_estimators=200, max_depth=10, min_samples_split=5, random_state=42)
+            rf_model.fit(X_train_scaled, y_train)
+            best_models['Random Forest'] = rf_model
+            # Save the retrained model with a different name to avoid overwriting
+            joblib.dump(rf_model, 'models/random_forest_retrained.pkl')
+            print("Retrained Random Forest model.")
+
+        if 'Logistic Regression' in models_to_retrain:
+            lr_model = LogisticRegression(C=0.001, penalty='l2', solver='liblinear', random_state=42, max_iter=1000)
+            lr_model.fit(X_train_scaled, y_train)
+            best_models['Logistic Regression'] = lr_model
+            joblib.dump(lr_model, 'models/logistic_regression_retrained.pkl')
+            print("Retrained Logistic Regression model.")
+
+        if 'Gradient Boosting' in models_to_retrain:
+            gb_model = GradientBoostingClassifier(n_estimators=200, learning_rate=0.1, max_depth=5, random_state=42)
+            gb_model.fit(X_train_scaled, y_train)
+            best_models['Gradient Boosting'] = gb_model
+            joblib.dump(gb_model, 'models/gradient_boosting_retrained.pkl')
+            print("Retrained Gradient Boosting model.")
+
+    # Load upset models (we'll retrain these if needed in a separate step)
     if os.path.exists('models/home_upset_model.pkl'):
         home_upset_model = joblib.load('models/home_upset_model.pkl')
         away_upset_model = joblib.load('models/away_upset_model.pkl')
@@ -51,13 +115,49 @@ try:
         away_upset_model = None
         home_upset_scaler = None
         away_upset_scaler = None
-except:
+except Exception as e:
+    print(f"Error loading models: {e}")
     # If models from full script aren't available, use simplified models
     best_models = {}
+    models_to_retrain = []
+
     for model_name in ['logistic_regression_model.pkl', 'random_forest_model.pkl', 'gradient_boosting_model.pkl']:
         if os.path.exists(f'models/{model_name}'):
             model = joblib.load(f'models/{model_name}')
-            best_models[model_name.replace('_model.pkl', '').replace('_', ' ').title()] = model
+            display_name = model_name.replace('_model.pkl', '').replace('_', ' ').title()
+
+            # Check if model needs retraining due to feature count mismatch
+            if check_model_features(model, len(feature_names)):
+                best_models[display_name] = model
+                print(f"Loaded {display_name} model successfully.")
+            else:
+                print(f"{display_name} model has feature count mismatch. Will retrain.")
+                models_to_retrain.append(display_name)
+
+    # Retrain models if needed
+    if models_to_retrain:
+        print(f"Retraining models with new features: {', '.join(models_to_retrain)}")
+
+        if 'Random Forest' in models_to_retrain:
+            rf_model = RandomForestClassifier(n_estimators=200, max_depth=10, min_samples_split=5, random_state=42)
+            rf_model.fit(X_train_scaled, y_train)
+            best_models['Random Forest'] = rf_model
+            joblib.dump(rf_model, 'models/random_forest_retrained.pkl')
+            print("Retrained Random Forest model.")
+
+        if 'Logistic Regression' in models_to_retrain:
+            lr_model = LogisticRegression(C=0.001, penalty='l2', solver='liblinear', random_state=42, max_iter=1000)
+            lr_model.fit(X_train_scaled, y_train)
+            best_models['Logistic Regression'] = lr_model
+            joblib.dump(lr_model, 'models/logistic_regression_retrained.pkl')
+            print("Retrained Logistic Regression model.")
+
+        if 'Gradient Boosting' in models_to_retrain:
+            gb_model = GradientBoostingClassifier(n_estimators=200, learning_rate=0.1, max_depth=5, random_state=42)
+            gb_model.fit(X_train_scaled, y_train)
+            best_models['Gradient Boosting'] = gb_model
+            joblib.dump(gb_model, 'models/gradient_boosting_retrained.pkl')
+            print("Retrained Gradient Boosting model.")
 
     # Load upset model
     if os.path.exists('models/upset_model.pkl'):
@@ -67,17 +167,21 @@ except:
         upset_model = None
         upset_scaler = None
 
-# If no models were loaded, train simple models
+# If no models were loaded or retrained, train simple models
 if not best_models:
     print("No pre-trained models found. Training simple models...")
-    from sklearn.linear_model import LogisticRegression
-    from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
     best_models = {
-        'Logistic Regression': LogisticRegression(max_iter=1000, random_state=42).fit(X_train, y_train),
-        'Random Forest': RandomForestClassifier(random_state=42).fit(X_train, y_train),
-        'Gradient Boosting': GradientBoostingClassifier(random_state=42).fit(X_train, y_train)
+        'Logistic Regression': LogisticRegression(max_iter=1000, random_state=42).fit(X_train_scaled, y_train),
+        'Random Forest': RandomForestClassifier(random_state=42).fit(X_train_scaled, y_train),
+        'Gradient Boosting': GradientBoostingClassifier(random_state=42).fit(X_train_scaled, y_train)
     }
+
+    # Save the newly trained models
+    for name, model in best_models.items():
+        joblib.dump(model, f'models/{name.lower().replace(" ", "_")}_new.pkl')
+
+    print("Trained and saved new models.")
 
 # Evaluate models
 print("Evaluating models...")

@@ -148,15 +148,130 @@ def calculate_recent_performance(games_df, n_games=10):
 
     return df
 
+# Function to calculate team's streak before the current game (positive for winning streak, negative for losing streak)
+def calculate_streak(games_df):
+    # Create a copy to avoid modifying the original dataframe
+    df = games_df.copy()
+
+    # Initialize columns for streak
+    df['away_streak'] = 0
+    df['home_streak'] = 0
+
+    # Get unique teams
+    teams = set(df['away_team'].unique()) | set(df['home_team'].unique())
+
+    # For each team, calculate streak before each game
+    for team in teams:
+        # Get games where team played (either home or away)
+        team_games = df[(df['away_team'] == team) | (df['home_team'] == team)].sort_values('date')
+
+        # Initialize streak
+        current_streak = 0
+
+        # Create a dictionary to store previous streak for each game
+        prev_streaks = {}
+
+        # First pass: calculate streaks after each game
+        for idx, game in team_games.iterrows():
+            # Store the streak before this game
+            prev_streaks[idx] = current_streak
+
+            # Update streak based on game result
+            if (game['away_team'] == team and game['result'] == 0) or \
+               (game['home_team'] == team and game['result'] == 1):
+                # Team won
+                if current_streak >= 0:
+                    # Continue winning streak
+                    current_streak += 1
+                else:
+                    # Start new winning streak
+                    current_streak = 1
+            else:
+                # Team lost
+                if current_streak <= 0:
+                    # Continue losing streak
+                    current_streak -= 1
+                else:
+                    # Start new losing streak
+                    current_streak = -1
+
+        # Second pass: update dataframe with streak before each game
+        for idx, game in team_games.iterrows():
+            # Update the appropriate column in the original dataframe with the streak BEFORE this game
+            if game['away_team'] == team:
+                df.at[idx, 'away_streak'] = prev_streaks[idx]
+            else:
+                df.at[idx, 'home_streak'] = prev_streaks[idx]
+
+    return df
+
+# Function to calculate weighted recent performance (more weight to recent games)
+def calculate_weighted_performance(games_df, windows=[3, 5, 10], weights=[0.5, 0.3, 0.2]):
+    # Create a copy to avoid modifying the original dataframe
+    df = games_df.copy()
+
+    # Initialize columns for weighted performance
+    df['away_weighted_win_pct'] = np.nan
+    df['home_weighted_win_pct'] = np.nan
+
+    # Get unique teams
+    teams = set(df['away_team'].unique()) | set(df['home_team'].unique())
+
+    # For each team, calculate weighted win percentage before each game
+    for team in teams:
+        # Get games where team played (either home or away)
+        team_games = df[(df['away_team'] == team) | (df['home_team'] == team)].sort_values('date')
+
+        # For each game, calculate weighted win percentage based on previous games
+        for idx, game in team_games.iterrows():
+            # Find the index of current game in the sorted team games
+            game_idx = team_games.index.get_loc(idx)
+
+            # If we have enough previous games for the largest window
+            if game_idx >= max(windows):
+                weighted_win_pct = 0
+
+                # Calculate win percentage for each window and apply weights
+                for i, window in enumerate(windows):
+                    # Get games BEFORE this game for this window
+                    window_games = team_games.iloc[game_idx-window:game_idx]
+
+                    # Count wins
+                    wins = 0
+                    for _, window_game in window_games.iterrows():
+                        if (window_game['away_team'] == team and window_game['result'] == 0) or \
+                           (window_game['home_team'] == team and window_game['result'] == 1):
+                            wins += 1
+
+                    # Calculate win percentage for this window
+                    window_win_pct = wins / window
+
+                    # Add weighted contribution
+                    weighted_win_pct += window_win_pct * weights[i]
+
+                # Update the appropriate column in the original dataframe
+                if game['away_team'] == team:
+                    df.at[idx, 'away_weighted_win_pct'] = weighted_win_pct
+                else:
+                    df.at[idx, 'home_weighted_win_pct'] = weighted_win_pct
+
+    return df
+
 # Calculate recent performance for different windows
 games_with_recent_5 = calculate_recent_performance(games_2018_2019, 5)
 games_with_recent_10 = calculate_recent_performance(games_2018_2019, 10)
 games_with_recent_15 = calculate_recent_performance(games_2018_2019, 15)
 
+# Calculate streak and weighted performance
+games_with_streak = calculate_streak(games_2018_2019)
+games_with_weighted = calculate_weighted_performance(games_2018_2019)
+
 # Save processed data
 games_with_recent_5.to_csv('processed_data/games_with_recent_5.csv')
 games_with_recent_10.to_csv('processed_data/games_with_recent_10.csv')
 games_with_recent_15.to_csv('processed_data/games_with_recent_15.csv')
+games_with_streak.to_csv('processed_data/games_with_streak.csv')
+games_with_weighted.to_csv('processed_data/games_with_weighted.csv')
 
 # Create features for back-to-back games
 print("Creating features for back-to-back games...")
@@ -262,6 +377,24 @@ combined_data = pd.merge(
     how='left'
 )
 
+# Add streak features
+print("Adding streak features...")
+combined_data = pd.merge(
+    combined_data,
+    games_with_streak[['game_id', 'away_streak', 'home_streak']],
+    on='game_id',
+    how='left'
+)
+
+# Add weighted performance features
+print("Adding weighted performance features...")
+combined_data = pd.merge(
+    combined_data,
+    games_with_weighted[['game_id', 'away_weighted_win_pct', 'home_weighted_win_pct']],
+    on='game_id',
+    how='left'
+)
+
 # Add back-to-back features
 combined_data = pd.merge(
     combined_data,
@@ -290,8 +423,22 @@ combined_data = pd.merge(
 # Calculate ELO difference
 combined_data['elo_diff'] = combined_data['home_elo_i'] - combined_data['away_elo_i']
 
-# Calculate point differential
+# Calculate point differential (for analysis only, not to be used as a feature)
 combined_data['point_diff'] = combined_data['home_score'] - combined_data['away_score']
+
+# Create differential features between home and away teams
+print("Creating differential features between home and away teams...")
+combined_data['eFGp_diff'] = combined_data['h_eFGp'] - combined_data['a_eFGp']
+combined_data['FTr_diff'] = combined_data['h_FTr'] - combined_data['a_FTr']
+combined_data['ORBp_diff'] = combined_data['h_ORBp'] - combined_data['a_ORBp']
+combined_data['TOVp_diff'] = combined_data['h_TOVp'] - combined_data['a_TOVp']
+
+# Create interaction features for Four Factors
+print("Creating interaction features for Four Factors...")
+combined_data['h_eFGp_x_TOVp'] = combined_data['h_eFGp'] * (1 - combined_data['h_TOVp'])
+combined_data['a_eFGp_x_TOVp'] = combined_data['a_eFGp'] * (1 - combined_data['a_TOVp'])
+combined_data['h_eFGp_x_ORBp'] = combined_data['h_eFGp'] * combined_data['h_ORBp']
+combined_data['a_eFGp_x_ORBp'] = combined_data['a_eFGp'] * combined_data['a_ORBp']
 
 # Define upset based on ELO ratings
 combined_data['favorite'] = np.where(combined_data['home_elo_i'] > combined_data['away_elo_i'], 1, 0)
@@ -303,7 +450,11 @@ combined_data = combined_data.fillna({
     'home_last_n_win_pct': 0.5,
     'away_back_to_back': 0,
     'home_back_to_back': 0,
-    'away_vs_home_win_pct': 0.5
+    'away_vs_home_win_pct': 0.5,
+    'away_streak': 0,
+    'home_streak': 0,
+    'away_weighted_win_pct': 0.5,
+    'home_weighted_win_pct': 0.5
 })
 
 # Save combined dataset
@@ -334,7 +485,14 @@ features = [
     'away_back_to_back', 'home_back_to_back',
     'away_vs_home_win_pct',
     'a_eFGp', 'a_FTr', 'a_ORBp', 'a_TOVp',
-    'h_eFGp', 'h_FTr', 'h_ORBp', 'h_TOVp'
+    'h_eFGp', 'h_FTr', 'h_ORBp', 'h_TOVp',
+    # Differential features
+    'eFGp_diff', 'FTr_diff', 'ORBp_diff', 'TOVp_diff',
+    # Interaction features
+    'h_eFGp_x_TOVp', 'a_eFGp_x_TOVp', 'h_eFGp_x_ORBp', 'a_eFGp_x_ORBp',
+    # Momentum features
+    'away_streak', 'home_streak',
+    'away_weighted_win_pct', 'home_weighted_win_pct'
 ]
 
 # Create X and y for training and testing
