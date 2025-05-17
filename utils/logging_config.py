@@ -85,21 +85,12 @@ def setup_logger(
     return logger
 
 def get_script_logger(script_name: str) -> logging.Logger:
-    """
-    Get a logger for a script with standard configuration.
+    """Get a logger for a script based on the script filename"""
+    # Extract just the filename without path or extension
+    base_name = os.path.basename(script_name)
+    script_name_without_ext = os.path.splitext(base_name)[0]
     
-    Args:
-        script_name: Name of the script (without .py extension)
-        
-    Returns:
-        Configured logger
-    """
-    # Remove .py extension if present
-    if script_name.endswith('.py'):
-        script_name = script_name[:-3]
+    # Create log filename with date
+    log_file = f"logs/{script_name_without_ext}_{datetime.now().strftime('%Y%m%d')}.log"
     
-    # Create log file path
-    timestamp = datetime.now().strftime("%Y%m%d")
-    log_file = f"logs/{script_name}_{timestamp}.log"
-    
-    return setup_logger(script_name, log_file, level="info")
+    return setup_logger(script_name_without_ext, log_file)

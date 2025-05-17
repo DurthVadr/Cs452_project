@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
+from imblearn.over_sampling import RandomOverSampler, SMOTE
+from collections import Counter
 
 # Set plot style
 plt.style.use('ggplot')
@@ -21,7 +23,7 @@ team_full_30 = pd.read_csv('data/team_full_30.csv', index_col=0)
 
 # Filter for 2018-2019 season
 season_2018_2019 = 1819
-games_2018_2019 = game_info[game_info['season'] == season_2018_2019]
+games_2018_2019 = game_info[game_info['season'] == season_2018_2019].copy()
 print(f"Number of games in 2018-2019 season: {len(games_2018_2019)}")
 
 # Convert date to datetime
@@ -37,23 +39,42 @@ if not os.path.exists('processed_data'):
 
 # Define function to handle missing values in team factor data
 def fill_missing_factor_data(df):
-    # Fill missing values with mean for each team
-    for col in ['a_eFGp', 'a_FTr', 'a_ORBp', 'a_TOVp', 'h_eFGp', 'h_FTr', 'h_ORBp', 'h_TOVp']:
-        if col in df.columns:
-            # For away team stats
-            if col.startswith('a_'):
-                team_col = 'away_team'
-            # For home team stats
-            else:
-                team_col = 'home_team'
-
-            # Group by team and fill missing values with team mean
-            team_means = df.groupby(team_col)[col].transform('mean')
-            df[col] = df[col].fillna(team_means)
-
-            # If still missing (new teams), fill with overall mean
-            df[col] = df[col].fillna(df[col].mean())
-
+    """Handle missing values in team factor data."""
+    df = df.copy()  # Create explicit copy
+    
+    # Check first if team_id column exists, if not try to find it
+    team_id_column = 'team_id'
+    if 'team_id' not in df.columns:
+        # Common alternative names for team ID columns
+        possible_columns = ['team', 'franchise_id', 'team_name', 'home_team', 'away_team']
+        for col in possible_columns:
+            if col in df.columns:
+                team_id_column = col
+                print(f"Using '{col}' column as team identifier")
+                break
+        # If still not found, print available columns and raise error
+        if team_id_column == 'team_id':
+            print("Available columns:", df.columns.tolist())
+            print("Warning: No team identifier column found. Using index for grouping.")
+            # As a fallback, add a dummy team_id column based on index
+            df['team_id'] = df.index
+            team_id_column = 'team_id'
+    
+    # Only process numeric columns - explicitly exclude date and object columns
+    numeric_cols = df.select_dtypes(include=['number']).columns
+    
+    for col in numeric_cols:
+        if team_id_column in col or 'season' in col or 'game_id' in col or 'date' in col:
+            continue
+        
+        # Get team-specific means for each column
+        team_means = df.groupby(team_id_column)[col].transform('mean')
+        # Fill with team means first
+        df.loc[:, col] = df[col].fillna(team_means)
+        
+        # Fill any remaining NaNs with overall column mean
+        df.loc[:, col] = df[col].fillna(df[col].mean())
+    
     return df
 
 # Process team factor data
@@ -71,25 +92,42 @@ team_factor_30_processed.to_csv('processed_data/team_factor_30_processed.csv')
 print("Processing team full data...")
 # Function to handle missing values in team full data
 def fill_missing_full_data(df):
-    # Get all stat columns (excluding game info columns)
-    stat_cols = [col for col in df.columns if col.startswith('a_') or col.startswith('h_')]
-
-    # Fill missing values with mean for each team
-    for col in stat_cols:
-        # For away team stats
-        if col.startswith('a_'):
-            team_col = 'away_team'
-        # For home team stats
-        else:
-            team_col = 'home_team'
-
-        # Group by team and fill missing values with team mean
-        team_means = df.groupby(team_col)[col].transform('mean')
-        df[col] = df[col].fillna(team_means)
-
-        # If still missing (new teams), fill with overall mean
-        df[col] = df[col].fillna(df[col].mean())
-
+    """Handle missing values in team full data."""
+    df = df.copy()  # Create explicit copy
+    
+    # Check first if team_id column exists, if not try to find it
+    team_id_column = 'team_id'
+    if 'team_id' not in df.columns:
+        # Common alternative names for team ID columns
+        possible_columns = ['team', 'franchise_id', 'team_name', 'home_team', 'away_team']
+        for col in possible_columns:
+            if col in df.columns:
+                team_id_column = col
+                print(f"Using '{col}' column as team identifier")
+                break
+        # If still not found, print available columns and raise error
+        if team_id_column == 'team_id':
+            print("Available columns:", df.columns.tolist())
+            print("Warning: No team identifier column found. Using index for grouping.")
+            # As a fallback, add a dummy team_id column based on index
+            df['team_id'] = df.index
+            team_id_column = 'team_id'
+    
+    # Only process numeric columns
+    numeric_cols = df.select_dtypes(include=['number']).columns
+    
+    for col in numeric_cols:
+        if team_id_column in col or 'season' in col or 'game_id' in col or 'date' in col:
+            continue
+        
+        # Get team-specific means for each column
+        team_means = df.groupby(team_id_column)[col].transform('mean')
+        # Fill with team means first
+        df.loc[:, col] = df[col].fillna(team_means)
+        
+        # Fill any remaining NaNs with overall column mean
+        df.loc[:, col] = df[col].fillna(df[col].mean())
+    
     return df
 
 team_full_10_processed = fill_missing_full_data(team_full_10[team_full_10['season'] == season_2018_2019])
@@ -474,6 +512,123 @@ test_data = combined_data.iloc[train_size:]
 # Save train and test datasets
 train_data.to_csv('processed_data/train_data.csv')
 test_data.to_csv('processed_data/test_data.csv')
+
+# Original class distribution
+print("\n--- Original Class Distribution ---")
+print("Checking upset distribution in training data...")
+train_upset_count = Counter(train_data['upset'])[1]
+train_non_upset_count = Counter(train_data['upset'])[0]
+print(f"Upset games: {train_upset_count} ({train_upset_count/(train_upset_count+train_non_upset_count)*100:.1f}%)")
+print(f"Non-upset games: {train_non_upset_count} ({train_non_upset_count/(train_upset_count+train_non_upset_count)*100:.1f}%)")
+
+# Save the original training data
+train_data.to_csv('processed_data/train_data_original.csv')
+
+# APPROACH 1: Random Oversampling
+print("\n--- Applying Random Oversampling ---")
+X_train_original = train_data.drop(columns=['result', 'upset'])
+y_train_original = train_data[['result', 'upset']]
+
+ros = RandomOverSampler(random_state=42)
+X_resampled_ros, _ = ros.fit_resample(X_train_original, train_data['upset'])
+
+# Map the resampled indices back to the original DataFrame to include all columns
+train_data_ros = pd.DataFrame()
+for i, idx in enumerate(ros.sample_indices_):
+    if i < len(train_data):
+        train_data_ros = pd.concat([train_data_ros, train_data.iloc[idx:idx+1]], axis=0)
+    else:
+        # This is a synthetic sample, duplicate an existing upset sample
+        original_idx = ros.sample_indices_[i % len(train_data)]
+        train_data_ros = pd.concat([train_data_ros, train_data.iloc[original_idx:original_idx+1]], axis=0)
+
+# Check new class distribution
+ros_upset_count = Counter(train_data_ros['upset'])[1]
+ros_non_upset_count = Counter(train_data_ros['upset'])[0]
+print(f"After Random Oversampling:")
+print(f"Upset games: {ros_upset_count} ({ros_upset_count/(ros_upset_count+ros_non_upset_count)*100:.1f}%)")
+print(f"Non-upset games: {ros_non_upset_count} ({ros_non_upset_count/(ros_upset_count+ros_non_upset_count)*100:.1f}%)")
+
+# Save the Random Oversampled training data
+train_data_ros.to_csv('processed_data/train_data_ros.csv')
+
+# APPROACH 2: SMOTE
+print("\n--- Applying SMOTE ---")
+# Use only numeric features for SMOTE
+X_train_numeric = train_data.select_dtypes(include=['number']).drop(columns=['result', 'upset'])
+y_train = train_data['upset']
+
+# Apply SMOTE
+smote = SMOTE(random_state=42)
+X_resampled_smote, y_resampled_smote = smote.fit_resample(X_train_numeric, y_train)
+
+# Create a new DataFrame from the resampled data
+train_data_smote = pd.DataFrame(X_resampled_smote, columns=X_train_numeric.columns)
+
+# Add the target columns
+train_data_smote['upset'] = y_resampled_smote
+
+# Handle the result column appropriately
+# Default value for result - will be overridden based on upset
+train_data_smote['result'] = 0 
+
+# For original samples, use original result
+for i in range(min(len(train_data), len(train_data_smote))):
+    train_data_smote.loc[i, 'result'] = train_data.iloc[i]['result']
+    
+# For synthetic upset samples, result should be opposite of favorite
+for i in range(len(train_data), len(train_data_smote)):
+    # If upset=1, then result is opposite of favorite
+    # If this team is favorite (1) then result should be 0 for an upset
+    # If this team is not favorite (0) then result should be 1 for an upset
+    favorite = 1 if train_data_smote.loc[i, 'home_elo_i'] > train_data_smote.loc[i, 'away_elo_i'] else 0
+    train_data_smote.loc[i, 'result'] = 1 - favorite
+
+# Add back the non-numeric columns (except result and upset that we've already handled)
+for col in train_data.columns:
+    if col not in train_data_smote.columns and col not in ['result', 'upset']:
+        # Create a series of the right length
+        if len(train_data_smote) > len(train_data):
+            # We need to pad the original values
+            if col == 'date':
+                # Use the last date in the training set for synthetic samples
+                last_date = train_data['date'].max()
+                values = train_data['date'].tolist() + [last_date] * (len(train_data_smote) - len(train_data))
+                train_data_smote[col] = values
+            else:
+                # For categorical columns, find values from samples with matching upset value
+                values = []
+                # First, add all original values
+                values.extend(train_data[col].tolist())
+                
+                # Then, for each synthetic sample, find a suitable value from original data
+                synthetic_count = len(train_data_smote) - len(train_data)
+                upset_samples = train_data[train_data['upset'] == 1]
+                
+                if len(upset_samples) > 0:
+                    # Get values from upset samples and repeat as needed
+                    upset_values = upset_samples[col].tolist()
+                    while len(values) < len(train_data_smote):
+                        values.append(upset_values[len(values) % len(upset_values)])
+                else:
+                    # No upset samples, use any value
+                    filler = train_data[col].iloc[0]
+                    values.extend([filler] * synthetic_count)
+                    
+                train_data_smote[col] = values
+        else:
+            # If the SMOTE data is smaller or equal to original data, just take the right number of values
+            train_data_smote[col] = train_data[col].head(len(train_data_smote)).values
+
+# Check new class distribution
+smote_upset_count = sum(train_data_smote['upset'] == 1)
+smote_non_upset_count = sum(train_data_smote['upset'] == 0)
+print(f"After SMOTE:")
+print(f"Upset games: {smote_upset_count} ({smote_upset_count/(smote_upset_count+smote_non_upset_count)*100:.1f}%)")
+print(f"Non-upset games: {smote_non_upset_count} ({smote_non_upset_count/(smote_upset_count+smote_non_upset_count)*100:.1f}%)")
+
+# Save the SMOTE training data
+train_data_smote.to_csv('processed_data/train_data_smote.csv')
 
 # Create feature sets for modeling
 print("Creating feature sets for modeling...")
