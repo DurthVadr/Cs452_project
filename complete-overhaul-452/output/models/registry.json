@@ -1,0 +1,148 @@
+{
+  "models": {
+    "logistic_regression": {
+      "versions": [
+        {
+          "version": "20250518_143315",
+          "path": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/models/logistic_regression/logistic_regression_20250518_143315.pkl",
+          "created_at": "20250518_143315",
+          "artifacts": {
+            "scaler": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/models/logistic_regression/logistic_regression_20250518_143315_scaler.pkl"
+          },
+          "accuracy": 0.6382113821138211,
+          "feature_count": 26,
+          "samples": 984
+        }
+      ],
+      "latest": "20250518_143315"
+    },
+    "random_forest": {
+      "versions": [
+        {
+          "version": "20250518_143315",
+          "path": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/models/random_forest/random_forest_20250518_143315.pkl",
+          "created_at": "20250518_143315",
+          "artifacts": {
+            "scaler": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/models/random_forest/random_forest_20250518_143315_scaler.pkl"
+          },
+          "accuracy": 0.6341463414634146,
+          "feature_count": 26,
+          "samples": 984
+        }
+      ],
+      "latest": "20250518_143315"
+    },
+    "gradient_boosting": {
+      "versions": [
+        {
+          "version": "20250518_143316",
+          "path": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/models/gradient_boosting/gradient_boosting_20250518_143316.pkl",
+          "created_at": "20250518_143316",
+          "artifacts": {
+            "scaler": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/models/gradient_boosting/gradient_boosting_20250518_143316_scaler.pkl"
+          },
+          "accuracy": 0.6178861788617886,
+          "feature_count": 26,
+          "samples": 984
+        }
+      ],
+      "latest": "20250518_143316"
+    },
+    "elo": {
+      "versions": [
+        {
+          "version": "20250518_143317",
+          "path": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/models/elo/elo_20250518_143317.pkl",
+          "created_at": "20250518_143317",
+          "artifacts": {},
+          "k_factor": 30,
+          "home_advantage": 75,
+          "accuracy": 0.6514227642276422,
+          "parameters": {
+            "k_factor": 30,
+            "home_advantage": 75,
+            "initial_rating": 1500
+          }
+        }
+      ],
+      "latest": "20250518_143317"
+    },
+    "voting_ensemble": {
+      "versions": [
+        {
+          "version": "20250518_143325",
+          "path": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/models/voting_ensemble/voting_ensemble_20250518_143325.pkl",
+          "created_at": "20250518_143325",
+          "artifacts": {
+            "scaler": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/models/voting_ensemble/voting_ensemble_20250518_143325_scaler.pkl"
+          },
+          "base_models": [
+            "logistic_regression",
+            "random_forest",
+            "gradient_boosting"
+          ],
+          "accuracy": 0.6382113821138211,
+          "voting_ensemble_accuracy": 0.6382113821138211,
+          "voting_ensemble_precision": 0.6728395061728395,
+          "voting_ensemble_recall": 0.7517241379310344,
+          "voting_ensemble_f1": 0.7100977198697068,
+          "voting_ensemble_roc_auc": 0.7053601911915329,
+          "voting_ensemble_upset_accuracy": 0.2976190476190476,
+          "voting_ensemble_upset_precision": 0.45454545454545453,
+          "voting_ensemble_upset_recall": 0.2976190476190476,
+          "voting_ensemble_upset_f1": 0.3597122302158273,
+          "voting_ensemble_predictions_path": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/predictions/voting_ensemble_predictions.npy",
+          "voting_ensemble_probabilities_path": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/predictions/voting_ensemble_probabilities.npy"
+        }
+      ],
+      "latest": "20250518_143325"
+    },
+    "stacking_ensemble": {
+      "versions": [
+        {
+          "version": "20250518_143332",
+          "path": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/models/stacking_ensemble/stacking_ensemble_20250518_143332.pkl",
+          "created_at": "20250518_143332",
+          "artifacts": {
+            "scaler": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/models/stacking_ensemble/stacking_ensemble_20250518_143332_scaler.pkl"
+          },
+          "base_models": [
+            "logistic_regression",
+            "random_forest",
+            "gradient_boosting"
+          ],
+          "accuracy": 0.6910569105691057,
+          "stacking_ensemble_accuracy": 0.6910569105691057,
+          "stacking_ensemble_precision": 0.7116564417177914,
+          "stacking_ensemble_recall": 0.8,
+          "stacking_ensemble_f1": 0.7532467532467533,
+          "stacking_ensemble_roc_auc": 0.7330146807784227,
+          "stacking_ensemble_upset_accuracy": 0.2976190476190476,
+          "stacking_ensemble_upset_precision": 0.5952380952380952,
+          "stacking_ensemble_upset_recall": 0.2976190476190476,
+          "stacking_ensemble_upset_f1": 0.39682539682539686,
+          "stacking_ensemble_predictions_path": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/predictions/stacking_ensemble_predictions.npy",
+          "stacking_ensemble_probabilities_path": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/predictions/stacking_ensemble_probabilities.npy"
+        }
+      ],
+      "latest": "20250518_143332"
+    },
+    "upset_specialized": {
+      "versions": [
+        {
+          "version": "20250518_143333",
+          "path": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/models/upset_specialized/upset_specialized_20250518_143333.pkl",
+          "created_at": "20250518_143333",
+          "artifacts": {
+            "upset_model": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/models/upset_specialized/upset_specialized_20250518_143333_upset_model.pkl",
+            "main_scaler": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/models/upset_specialized/upset_specialized_20250518_143333_main_scaler.pkl",
+            "upset_scaler": "/Users/kerembetir/Desktop/Others/Kerem/complete-overhaul-452/output/models/upset_specialized/upset_specialized_20250518_143333_upset_scaler.pkl"
+          },
+          "accuracy": 0.5894308943089431,
+          "upset_threshold": 0.4
+        }
+      ],
+      "latest": "20250518_143333"
+    }
+  }
+}

@@ -2,19 +2,19 @@
 
 ## Executive Summary
 
-This report presents the results of a comprehensive analysis of NBA games from the 2018-2019 season. The project aimed to develop predictive models for NBA game outcomes, with a particular focus on improving upon the baseline ELO rating system and identifying factors that contribute to upsets. The best model achieved an accuracy of 66.3%, which represents an improvement of -1.2% over the baseline ELO model.
+This report presents the results of a comprehensive analysis of NBA games from the 2018-2019 season. The project aimed to develop predictive models for NBA game outcomes, with a particular focus on improving upon the baseline ELO rating system and identifying factors that contribute to upsets. The best model achieved an accuracy of 65.9%, which represents an improvement of -1.6% over the baseline ELO model.
 
 ## Model Performance
 
 ![Model Accuracy Comparison](images/model_accuracy_comparison.png)
 
-The above chart shows the performance of different models on the test dataset. The best performing model was Gradient Boosting with an accuracy of 66.26%.
+The above chart shows the performance of different models on the test dataset. The best performing model was Logistic Regression with an accuracy of 65.85%.
 
 ### Comparison with ELO Rating System
 
 ![ELO vs Model Comparison](images/elo_vs_model_comparison.png)
 
-The best model outperformed the ELO rating system, particularly in predicting upset games where the underdog team wins. For upset games, the model achieved 2.4% accuracy compared to the ELO system's 31.0%.
+The best model outperformed the ELO rating system, particularly in predicting upset games where the underdog team wins. For upset games, the model achieved 0.0% accuracy compared to the ELO system's 31.0%.
 
 ### Performance by Game Characteristics
 
@@ -28,7 +28,7 @@ The model's accuracy increases with the ELO difference between teams, which is e
 
 ![Accuracy by Upset Status](images/accuracy_by_upset.png)
 
-The model performs better on non-upset games (99.4% accuracy) compared to upset games (2.4% accuracy). This is expected as upsets are inherently difficult to predict.
+The model performs better on non-upset games (100.0% accuracy) compared to upset games (0.0% accuracy). This is expected as upsets are inherently difficult to predict.
 
 ## Team Performance Analysis
 
@@ -68,7 +68,7 @@ The ELO rating system was optimized by testing different combinations of K-facto
 
 The analysis demonstrates that machine learning models can outperform traditional ELO rating systems for NBA game prediction. Key findings include:
 
-1. The Gradient Boosting model achieved the highest accuracy at 66.26%.
+1. The Logistic Regression model achieved the highest accuracy at 65.85%.
 2. Effective field goal percentage is the most important of the Four Factors in determining game outcomes.
 3. Teams can be effectively clustered based on their playing styles, which may provide insights for matchup analysis.
 4. Upset prediction remains challenging, but the model shows improvement over the baseline ELO system.
