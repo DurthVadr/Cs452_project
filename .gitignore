@@ -23,3 +23,6 @@ team_analysis/
 logs/
 utils/__pycache__/
 __pycache__
+a_project/all_models/
+a_project/all_plots/
+a_project/data/processed/
