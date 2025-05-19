@@ -208,56 +208,56 @@ def add_team_stats(games_df, team_factor_df):
 
     return games_df
 
-def calculate_rolling_factors(games_df):
-    """Calculate rolling averages for Four Factors using only past games."""
-    print("Calculating rolling Four Factors...")
-    df = games_df.copy().sort_values('date')
+# def calculate_rolling_factors(games_df):
+#     """Calculate rolling averages for Four Factors using only past games."""
+#     print("Calculating rolling Four Factors...")
+#     df = games_df.copy().sort_values('date')
 
-    # Initialize rolling factor columns
-    for factor in ['eFGp', 'TOVp', 'ORBp', 'FTr']:
-        for prefix in ['a_', 'h_']:
-            col = f'{prefix}{factor}'
-            if col in df.columns:
-                df[f'{col}_10'] = df[col]  # Default to current value
+#     # Initialize rolling factor columns
+#     for factor in ['eFGp', 'TOVp', 'ORBp', 'FTr']:
+#         for prefix in ['a_', 'h_']:
+#             col = f'{prefix}{factor}'
+#             if col in df.columns:
+#                 df[f'{col}_10'] = df[col]  # Default to current value
 
-    # Get unique teams
-    teams = set(df['away_team'].unique()) | set(df['home_team'].unique())
+#     # Get unique teams
+#     teams = set(df['away_team'].unique()) | set(df['home_team'].unique())
 
-    # Process each team separately
-    for team in teams:
-        # Process away games
-        away_games = df[df['away_team'] == team].sort_values('date')
-        for i, (idx, game) in enumerate(away_games.iterrows()):
-            # Skip if not enough history
-            if i < 1:
-                continue
+#     # Process each team separately
+#     for team in teams:
+#         # Process away games
+#         away_games = df[df['away_team'] == team].sort_values('date')
+#         for i, (idx, game) in enumerate(away_games.iterrows()):
+#             # Skip if not enough history
+#             if i < 1:
+#                 continue
 
-            # Get previous games (up to 10)
-            prev_games = away_games.iloc[max(0, i-10):i]
+#             # Get previous games (up to 10)
+#             prev_games = away_games.iloc[max(0, i-10):i]
 
-            # Calculate rolling averages for each factor
-            for factor in ['eFGp', 'TOVp', 'ORBp', 'FTr']:
-                col = f'a_{factor}'
-                if col in df.columns and len(prev_games) > 0:
-                    df.at[idx, f'{col}_10'] = prev_games[col].mean()
+#             # Calculate rolling averages for each factor
+#             for factor in ['eFGp', 'TOVp', 'ORBp', 'FTr']:
+#                 col = f'a_{factor}'
+#                 if col in df.columns and len(prev_games) > 0:
+#                     df.at[idx, f'{col}_10'] = prev_games[col].mean()
 
-        # Process home games
-        home_games = df[df['home_team'] == team].sort_values('date')
-        for i, (idx, game) in enumerate(home_games.iterrows()):
-            # Skip if not enough history
-            if i < 1:
-                continue
+#         # Process home games
+#         home_games = df[df['home_team'] == team].sort_values('date')
+#         for i, (idx, game) in enumerate(home_games.iterrows()):
+#             # Skip if not enough history
+#             if i < 1:
+#                 continue
 
-            # Get previous games (up to 10)
-            prev_games = home_games.iloc[max(0, i-10):i]
+#             # Get previous games (up to 10)
+#             prev_games = home_games.iloc[max(0, i-10):i]
 
-            # Calculate rolling averages for each factor
-            for factor in ['eFGp', 'TOVp', 'ORBp', 'FTr']:
-                col = f'h_{factor}'
-                if col in df.columns and len(prev_games) > 0:
-                    df.at[idx, f'{col}_10'] = prev_games[col].mean()
+#             # Calculate rolling averages for each factor
+#             for factor in ['eFGp', 'TOVp', 'ORBp', 'FTr']:
+#                 col = f'h_{factor}'
+#                 if col in df.columns and len(prev_games) > 0:
+#                     df.at[idx, f'{col}_10'] = prev_games[col].mean()
 
-    return df
+#     return df
 
 def calculate_differential_features(games_df):
     """Calculate differential features between home and away teams."""
@@ -465,7 +465,7 @@ def main():
         games_df = add_matchup_history(games_df)
 
         # Step 5: Calculate rolling factors (fixed to only use past data)
-        games_df = calculate_rolling_factors(games_df)
+        # games_df = calculate_rolling_factors(games_df) # This is redundant.
 
         # Step 6: Calculate differential features
         games_df = calculate_differential_features(games_df)
