@@ -117,8 +117,10 @@ def analyze_feature_correlations(train_data, feature_names):
     correlations = []
     for feature in feature_names:
         if feature in train_data.columns:
-            corr = train_data[feature].corr(train_data['result'])
-            correlations.append((feature, corr))
+            # Only calculate correlation for numeric columns
+            if pd.api.types.is_numeric_dtype(train_data[feature]):
+                corr = train_data[feature].corr(train_data['result'])
+                correlations.append((feature, corr))
     
     # Sort by absolute correlation
     correlations.sort(key=lambda x: abs(x[1]), reverse=True)
