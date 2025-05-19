@@ -6,25 +6,34 @@ This project uses data science techniques to predict the outcomes of NBA games f
 
 The project has been enhanced with the following improvements:
 
-1. **Code Organization and Structure**:
+1. **Optimized Model Building Approach**:
+   - Implemented a centralized configuration system with feature_config.py and config.py
+   - Added SMOTE (Synthetic Minority Over-sampling Technique) for better handling of class imbalance
+   - Created a focused feature selection approach based on basketball analytics principles
+   - Improved model architecture with weighted ensemble techniques
+   - Enhanced upset prediction capabilities with specialized evaluation metrics
+
+2. **Code Organization and Structure**:
    - Added a centralized logging system for consistent logging across all scripts
    - Created utility modules for common functions to reduce code duplication
    - Improved error handling with try-except blocks for better robustness
-   - Added type hints for better code readability and maintainability
+   - Organized project structure with clear separation of configuration, data preparation, and modeling
 
-2. **Advanced Feature Engineering**:
+3. **Advanced Feature Engineering**:
    - Added differential features between home and away teams for Four Factors (eFGp, FTr, ORBp, TOVp)
    - Created interaction features to capture combined effects of shooting efficiency with turnover prevention and offensive rebounding
+   - Implemented a structured approach to feature organization (base features, four factors, advanced metrics)
    - These new features help the model better understand team matchup dynamics
 
-3. **Momentum Features**:
+4. **Momentum Features**:
    - Added streak indicators (positive for winning streaks, negative for losing streaks)
    - Implemented weighted recent performance metrics that give more importance to recent games
    - These features capture a team's current form and momentum going into each game
 
-4. **Comprehensive Logging**:
+5. **Comprehensive Logging and Reporting**:
    - Implemented a structured logging system with different log levels (debug, info, warning, error)
    - Added detailed logging for model training, evaluation, and performance metrics
+   - Created enhanced HTML reports with interactive visualizations
    - Log files are organized by script and date for easy troubleshooting
 
 ## Data Requirements
@@ -80,79 +89,96 @@ nba_prediction/
     ```
 4.  **Prepare Data Directory**: Create a `data` directory and place the required data files (see Data Requirements section).
 
-## Execution Order
+## Running the Pipeline
 
-You can run all scripts in sequence using the provided run_scripts.py:
+You can run the entire pipeline or specific stages using the `run_pipeline.py` script:
 
 ```bash
-python run_scripts.py
+# Run the entire pipeline
+python run_pipeline.py
+
+# Run specific stages
+python run_pipeline.py --stages data_exploration data_preparation
+
+# Stop on first error
+python run_pipeline.py --stop-on-error
 ```
 
-This will execute all scripts in the correct order and create log files in the logs directory.
+Available stages:
+- `data_exploration`: Explore and visualize the raw data
+- `data_preparation`: Clean and prepare data for modeling
+- `elo_analysis`: Analyze ELO rating system performance
+- `team_analysis`: Analyze team performance metrics
+- `model_building`: Build and tune prediction models
+- `model_evaluation`: Evaluate model performance
+- `ensemble_model`: Develop ensemble models
+- `report`: Generate final reports
 
 Alternatively, you can run each script individually in the following order:
 
 1.  **Data Exploration and Preparation**:
     ```bash
-    python3 data_exploration.py
-    python3 data_preparation.py
+    python data_exploration.py
+    python data_preparation.py
     ```
     *   **Input**: Raw CSV files from the `data/` directory.
     *   **Output**:
         *   `data_summary.md` (in project root)
         *   Processed data files in `processed_data/`
-        *   Exploratory visualizations in `exploration_plots/`
-    *   **New Features**: The updated `data_preparation.py` now creates:
+        *   Exploratory visualizations in `plots/`
+    *   **Features**: The `data_preparation.py` creates:
         *   Differential and interaction features between home and away teams
         *   Streak indicators to capture winning and losing streaks
         *   Weighted recent performance metrics that prioritize more recent games
 
 2.  **ELO Rating System Analysis**:
     ```bash
-    python3 elo_analysis.py
+    python elo_analysis.py
     ```
     *   **Input**: `game_info.csv` from the `data/` directory.
     *   **Output**: ELO analysis results and visualizations in `elo_analysis/`.
 
 3.  **Team Performance Analysis**:
     ```bash
-    python3 team_performance_analysis.py
+    python team_performance_analysis.py
     ```
     *   **Input**: Processed data from `processed_data/`.
     *   **Output**: Team analysis results and visualizations in `team_analysis/`.
 
 4.  **Model Building**:
     ```bash
-    # Basic model building
-    python3 simplified_model_building.py
-
-    # Advanced model building with feature selection and hyperparameter tuning
-    python3 improved_model_building.py
+    python optimized_model_building.py
     ```
     *   **Input**: Processed data from `processed_data/`.
-    *   **Output**: Trained models, evaluation results, and visualizations in `models/`.
-    *   **Note**: The improved model building script includes feature selection, hyperparameter tuning, and comprehensive logging.
+    *   **Output**: Trained models, evaluation results, and visualizations in `models/` and `plots/`.
+    *   **Features**: The optimized model building script includes:
+        * Centralized configuration with feature_config.py and config.py
+        * SMOTE for handling class imbalance
+        * Focused feature selection based on basketball analytics
+        * Weighted ensemble techniques
+        * Comprehensive upset prediction evaluation
+        * Enhanced HTML reporting
 
 5.  **Model Evaluation**:
     ```bash
-    python3 model_evaluation.py
+    python model_evaluation.py
     ```
     *   **Input**: Processed data and trained models from previous steps.
     *   **Output**: Detailed model evaluation results and visualizations in `evaluation/`.
 
-6.  **Final Report Generation**:
+6.  **Ensemble Model Development**:
     ```bash
-    python3 create_final_report.py
-    ```
-    *   **Input**: Results from all previous steps.
-    *   **Output**: Final report in Markdown and HTML formats, along with necessary images, in `final_report/`.
-
-7.  **Ensemble Model Development**:
-    ```bash
-    python3 ensemble_model_development.py
+    python ensemble_model.py
     ```
     *   **Input**: Processed data and trained models.
     *   **Output**: Ensemble models, evaluation results, and visualizations in `ensemble_model/`.
+
+7.  **Report Generation**:
+    ```bash
+    python create_report.py
+    ```
+    *   **Input**: Results from all previous steps.
+    *   **Output**: Final report in Markdown and HTML formats, along with necessary images, in `final_report/` and `html_reports/`.
 
 ## Output Description
 
