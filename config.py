@@ -74,6 +74,30 @@ SMOTE_PARAMS = {
     'k_neighbors': 5
 }
 
+# Advanced SMOTE variants parameters
+BORDERLINE_SMOTE_PARAMS = {
+    'random_state': RANDOM_STATE,
+    'k_neighbors': 5,
+    'kind': 'borderline-1'
+}
+
+SVM_SMOTE_PARAMS = {
+    'random_state': RANDOM_STATE,
+    'k_neighbors': 5,
+    'm_neighbors': 10
+}
+
+ADASYN_PARAMS = {
+    'random_state': RANDOM_STATE,
+    'n_neighbors': 5
+}
+
+# Data generation parameters
+SMOTE_METHOD = 'smote'  # Options: 'smote', 'borderline', 'svm', 'adasyn'
+FEATURE_AWARE_SAMPLES = 100  # Number of feature-aware samples to generate per class
+GAME_SPECIFIC_SAMPLES = 200  # Number of game-specific samples to generate
+USE_ENHANCED_DATA_GENERATION = True  # Whether to use enhanced data generation
+
 # Ensemble weights
 ENSEMBLE_WEIGHTS = {
     'logistic': 1,
