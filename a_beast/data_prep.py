@@ -413,7 +413,7 @@ def prepare_modeling_data(games_df):
     y_test = test_data['result']
 
     # Save the feature names for later use
-    with open('a_beast/data/processed/feature_names.txt', 'w') as f:
+    with open('data/processed/feature_names.txt', 'w') as f:
         f.write('\n'.join(available_features))
 
     return train_data, test_data, X_train, X_test, y_train, y_test
@@ -423,7 +423,7 @@ def save_processed_data(train_data, test_data, X_train, X_test, y_train, y_test,
     print("Saving processed data...")
 
     # Define file paths
-    data_dir = 'a_beast/data/processed'
+    data_dir = 'data/processed'
     os.makedirs(data_dir, exist_ok=True)
 
     # Save full datasets
