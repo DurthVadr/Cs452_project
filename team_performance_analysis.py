@@ -225,7 +225,7 @@ print("Analyzing team clustering based on playing style...")
 
 # Select relevant statistics for clustering
 clustering_stats = [
-    'FGp', 'eFGp', '3PAr', 'FTr', 'ORBp', 'DRBp', 'ASTp', 'TOVp', 'STLp', 'BLKp', 'PTS'
+    'FGp', 'eFGp', '3PAr', 'FTr', 'ORBp', 'DRBp', 'ASTp', 'TOVp', 'STLp', 'BLKp', 'PTS', 'ORtg', 'DRtg', '3Pp', 'TRBp'
 ]
 
 # Prepare data for clustering
@@ -234,51 +234,311 @@ cluster_data = team_avg_stats_df[clustering_stats]
 # Standardize data
 scaler = StandardScaler()
 cluster_data_scaled = scaler.fit_transform(cluster_data)
+cluster_data_scaled_df = pd.DataFrame(cluster_data_scaled, index=cluster_data.index, columns=clustering_stats)
 
-# Perform PCA for visualization
-pca = PCA(n_components=2)
-cluster_data_pca = pca.fit_transform(cluster_data_scaled)
+# Create custom scores for each cluster type
+# 1. Offensive Juggernauts: High pace, excellent shooting (especially 3PT), average/below-average defense
+offensive_juggernaut_metrics = {
+    'positive': ['PTS', 'ORtg', 'eFGp', '3Pp', '3PAr', 'ASTp'],  # Higher is better
+    'negative': []  # Lower is better
+}
 
-# Perform K-means clustering
-kmeans = KMeans(n_clusters=4, random_state=42)
-clusters = kmeans.fit_predict(cluster_data_scaled)
+# 2. Defensive Stalwarts: Strong defensive metrics, lower pace, efficient offense
+defensive_stalwart_metrics = {
+    'positive': ['STLp', 'BLKp'],  # Higher is better
+    'negative': ['DRtg', 'TOVp']  # Lower is better (DRtg inverted below)
+}
 
-# Add cluster labels to team data
+# 3. Interior Presence: Strong rebounding (especially offensive), inside scoring, less 3PT emphasis
+interior_presence_metrics = {
+    'positive': ['ORBp', 'DRBp', 'TRBp', 'BLKp', 'FTr'],  # Higher is better
+    'negative': ['3PAr']  # Lower is better
+}
+
+# 4. Balanced/Mid-Tier: More balanced statistical profile
+# This will be determined by teams that don't strongly fit into the other categories
+
+# Calculate scores for each team for each cluster type
+offensive_juggernaut_score = cluster_data_scaled_df[offensive_juggernaut_metrics['positive']].mean(axis=1)
+defensive_stalwart_score = cluster_data_scaled_df[defensive_stalwart_metrics['positive']].mean(axis=1) - cluster_data_scaled_df[defensive_stalwart_metrics['negative']].mean(axis=1)
+interior_presence_score = cluster_data_scaled_df[interior_presence_metrics['positive']].mean(axis=1) - cluster_data_scaled_df[interior_presence_metrics['negative']].mean(axis=1)
+
+# Create a DataFrame with these scores
+team_scores = pd.DataFrame({
+    'offensive_juggernaut': offensive_juggernaut_score,
+    'defensive_stalwart': defensive_stalwart_score,
+    'interior_presence': interior_presence_score
+}, index=cluster_data.index)
+
+# Calculate a "balance" score (lower means more balanced)
+team_scores['score_variance'] = team_scores.var(axis=1)
+team_scores['balanced_score'] = -team_scores['score_variance']  # Invert so higher means more balanced
+
+# Determine the dominant characteristic for each team
+team_scores['dominant_type'] = team_scores[['offensive_juggernaut', 'defensive_stalwart', 'interior_presence', 'balanced_score']].idxmax(axis=1)
+
+# Map the dominant type to cluster numbers
+cluster_mapping = {
+    'offensive_juggernaut': 0,  # Cluster 1
+    'defensive_stalwart': 1,    # Cluster 2
+    'interior_presence': 2,     # Cluster 3
+    'balanced_score': 3         # Cluster 4
+}
+
+team_scores['cluster'] = team_scores['dominant_type'].map(cluster_mapping)
+
+# Create a DataFrame for visualization
 team_clusters = pd.DataFrame({
     'team': cluster_data.index,
-    'cluster': clusters,
-    'pca_1': cluster_data_pca[:, 0],
-    'pca_2': cluster_data_pca[:, 1]
+    'cluster': team_scores['cluster'],
+    'offensive_score': offensive_juggernaut_score,
+    'defensive_score': defensive_stalwart_score,
+    'interior_score': interior_presence_score,
+    'balanced_score': team_scores['balanced_score'],
+    'dominant_type': team_scores['dominant_type']
 })
+
+# Save to CSV
 team_clusters.to_csv('team_analysis/team_clusters.csv', index=False)
 
-# Visualize team clusters
-plt.figure(figsize=(12, 8))
+# Create a 2D visualization using offensive score and interior score as axes
+plt.figure(figsize=(14, 10))
+
+# Define cluster names for the legend
+cluster_names = {
+    0: 'Offensive Juggernauts',
+    1: 'Defensive Stalwarts',
+    2: 'Interior Presence',
+    3: 'Balanced Teams'
+}
+
+# Define colors and markers for each cluster
+colors = ['#FF9500', '#4285F4', '#34A853', '#EA4335']
+markers = ['o', 's', '^', 'D']
+
+# Plot each cluster
 for cluster in range(4):
     cluster_teams = team_clusters[team_clusters['cluster'] == cluster]
-    plt.scatter(cluster_teams['pca_1'], cluster_teams['pca_2'], label=f'Cluster {cluster+1}')
+    plt.scatter(
+        cluster_teams['offensive_score'],
+        cluster_teams['interior_score'],
+        label=cluster_names[cluster],
+        color=colors[cluster],
+        marker=markers[cluster],
+        s=120,  # Larger point size
+        alpha=0.8
+    )
 
     # Add team labels
     for i, row in cluster_teams.iterrows():
-        plt.annotate(row['team'], (row['pca_1'], row['pca_2']), fontsize=9)
+        plt.annotate(
+            row['team'],
+            (row['offensive_score'], row['interior_score']),
+            fontsize=10,
+            fontweight='bold',
+            xytext=(5, 5),
+            textcoords='offset points',
+            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8)
+        )
 
-plt.title('Team Clustering Based on Playing Style')
-plt.xlabel('Principal Component 1')
-plt.ylabel('Principal Component 2')
-plt.legend()
-plt.grid(True)
+# Add reference lines
+plt.axhline(y=0, color='gray', linestyle='--', alpha=0.5)
+plt.axvline(x=0, color='gray', linestyle='--', alpha=0.5)
+
+# Add quadrant descriptions
+plt.annotate('High Offense, Low Interior', xy=(1, -1), xytext=(1.5, -1.5),
+             fontsize=12, ha='center', va='center', bbox=dict(boxstyle='round,pad=0.5', fc='lightyellow', alpha=0.7))
+plt.annotate('High Offense, High Interior', xy=(1, 1), xytext=(1.5, 1.5),
+             fontsize=12, ha='center', va='center', bbox=dict(boxstyle='round,pad=0.5', fc='lightyellow', alpha=0.7))
+plt.annotate('Low Offense, Low Interior', xy=(-1, -1), xytext=(-1.5, -1.5),
+             fontsize=12, ha='center', va='center', bbox=dict(boxstyle='round,pad=0.5', fc='lightyellow', alpha=0.7))
+plt.annotate('Low Offense, High Interior', xy=(-1, 1), xytext=(-1.5, 1.5),
+             fontsize=12, ha='center', va='center', bbox=dict(boxstyle='round,pad=0.5', fc='lightyellow', alpha=0.7))
+
+plt.title('NBA Team Clustering (2018-2019 Season)', fontsize=16, fontweight='bold')
+plt.xlabel('Offensive Prowess', fontsize=14)
+plt.ylabel('Interior Presence', fontsize=14)
+plt.legend(loc='upper right', fontsize=12, framealpha=0.9)
+plt.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.savefig('team_analysis/team_clusters.png')
+plt.savefig('team_analysis/team_clusters.png', dpi=300)
+
+# Create a second visualization showing defensive score vs offensive score
+plt.figure(figsize=(14, 10))
+
+# Plot each cluster
+for cluster in range(4):
+    cluster_teams = team_clusters[team_clusters['cluster'] == cluster]
+    plt.scatter(
+        cluster_teams['offensive_score'],
+        cluster_teams['defensive_score'],
+        label=cluster_names[cluster],
+        color=colors[cluster],
+        marker=markers[cluster],
+        s=120,
+        alpha=0.8
+    )
+
+    # Add team labels
+    for i, row in cluster_teams.iterrows():
+        plt.annotate(
+            row['team'],
+            (row['offensive_score'], row['defensive_score']),
+            fontsize=10,
+            fontweight='bold',
+            xytext=(5, 5),
+            textcoords='offset points',
+            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8)
+        )
+
+# Add reference lines
+plt.axhline(y=0, color='gray', linestyle='--', alpha=0.5)
+plt.axvline(x=0, color='gray', linestyle='--', alpha=0.5)
+
+plt.title('NBA Teams: Offensive vs Defensive Profile (2018-2019)', fontsize=16, fontweight='bold')
+plt.xlabel('Offensive Prowess', fontsize=14)
+plt.ylabel('Defensive Prowess', fontsize=14)
+plt.legend(loc='upper right', fontsize=12, framealpha=0.9)
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('team_analysis/team_clusters_offense_defense.png', dpi=300)
 
 # Analyze cluster characteristics
 cluster_stats = {}
+cluster_labels = {
+    0: 'Offensive Juggernauts',
+    1: 'Defensive Stalwarts',
+    2: 'Interior Presence',
+    3: 'Balanced Teams'
+}
+
 for cluster in range(4):
     cluster_teams = team_clusters[team_clusters['cluster'] == cluster]['team']
-    cluster_stats[f'Cluster {cluster+1}'] = team_avg_stats_df.loc[cluster_teams, clustering_stats].mean()
+    cluster_stats[cluster_labels[cluster]] = team_avg_stats_df.loc[cluster_teams, clustering_stats].mean()
+
+    # Add the custom scores to the cluster stats
+    cluster_teams_df = team_clusters[team_clusters['cluster'] == cluster]
+    cluster_stats[cluster_labels[cluster]]['offensive_score'] = cluster_teams_df['offensive_score'].mean()
+    cluster_stats[cluster_labels[cluster]]['defensive_score'] = cluster_teams_df['defensive_score'].mean()
+    cluster_stats[cluster_labels[cluster]]['interior_score'] = cluster_teams_df['interior_score'].mean()
+    cluster_stats[cluster_labels[cluster]]['balanced_score'] = cluster_teams_df['balanced_score'].mean()
+
+    # Add the teams in this cluster
+    cluster_stats[cluster_labels[cluster]]['teams'] = ', '.join(cluster_teams.tolist())
+    cluster_stats[cluster_labels[cluster]]['team_count'] = len(cluster_teams)
 
 # Convert to DataFrame
 cluster_stats_df = pd.DataFrame.from_dict(cluster_stats, orient='index')
+
+# Create cluster descriptions based on their key characteristics
+cluster_descriptions = {
+    'Offensive Juggernauts': "Teams with high scoring, efficient shooting (especially from three), and often average or below-average defense.",
+    'Defensive Stalwarts': "Teams with strong defensive metrics, lower pace, and efficient (though not necessarily high-volume) offense.",
+    'Interior Presence': "Teams that excel in rebounding (particularly offensive rebounding) and score frequently near the basket.",
+    'Balanced Teams': "Teams with a more balanced statistical profile, lacking extreme strengths or weaknesses."
+}
+
+# Add descriptions to the DataFrame
+cluster_stats_df['description'] = pd.Series(cluster_descriptions)
+
+# Save to CSV
 cluster_stats_df.to_csv('team_analysis/cluster_stats.csv')
+
+# Create a visual summary of the clusters showing their key metrics
+plt.figure(figsize=(12, 8))
+
+# Prepare data for bar chart
+cluster_metrics = ['offensive_score', 'defensive_score', 'interior_score', 'balanced_score']
+x = np.arange(len(cluster_labels))
+width = 0.2
+multiplier = 0
+
+# Plot bars for each metric
+for metric in cluster_metrics:
+    offset = width * multiplier
+    metric_values = [cluster_stats_df.loc[cluster_labels[i], metric] for i in range(4)]
+
+    plt.bar(x + offset, metric_values, width, label=metric.replace('_', ' ').title())
+    multiplier += 1
+
+# Add labels and formatting
+plt.axhline(y=0, color='gray', linestyle='--', alpha=0.5)
+plt.xlabel('Cluster Type', fontsize=12)
+plt.ylabel('Score', fontsize=12)
+plt.title('Cluster Characteristics by Key Metrics', fontsize=14, fontweight='bold')
+plt.xticks(x + width * 1.5, [cluster_labels[i] for i in range(4)], rotation=15)
+plt.legend(loc='upper right')
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('team_analysis/cluster_characteristics.png', dpi=300)
+
+# Create a radar chart to visualize the key stats for each cluster
+plt.figure(figsize=(14, 10))
+from matplotlib.path import Path
+from matplotlib.spines import Spine
+from matplotlib.transforms import Affine2D
+
+# Function to create a radar chart
+def radar_chart(ax, angles, values, color, label):
+    # Close the plot (connect last point to first)
+    values = np.append(values, values[0])
+    angles = np.append(angles, angles[0])
+
+    # Plot data
+    ax.plot(angles, values, color=color, linewidth=2, label=label)
+    ax.fill(angles, values, color=color, alpha=0.25)
+
+    # Set category labels
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(categories, fontsize=12)
+
+    # Remove y-axis labels
+    ax.set_yticklabels([])
+
+    # Add gridlines
+    ax.grid(True, alpha=0.3)
+
+    return ax
+
+# Select key stats for radar chart
+categories = ['PTS', 'ORtg', 'DRtg', 'eFGp', '3PAr', 'ORBp', 'DRBp', 'ASTp', 'STLp', 'BLKp']
+num_categories = len(categories)
+
+# Set up angles for radar chart (equally spaced around a circle)
+angles = np.linspace(0, 2*np.pi, num_categories, endpoint=False).tolist()
+
+# Create subplots (2x2 grid of radar charts)
+fig, axs = plt.subplots(2, 2, figsize=(14, 12), subplot_kw=dict(polar=True))
+axs = axs.flatten()
+
+# Normalize the data for radar chart
+normalized_stats = {}
+for category in categories:
+    # For DRtg, lower is better, so invert the normalization
+    if category == 'DRtg':
+        min_val = cluster_stats_df[category].min()
+        max_val = cluster_stats_df[category].max()
+        normalized_stats[category] = [(max_val - cluster_stats_df.loc[cluster_labels[i], category]) / (max_val - min_val) for i in range(4)]
+    else:
+        min_val = cluster_stats_df[category].min()
+        max_val = cluster_stats_df[category].max()
+        normalized_stats[category] = [(cluster_stats_df.loc[cluster_labels[i], category] - min_val) / (max_val - min_val) for i in range(4)]
+
+# Plot each cluster as a radar chart
+for i in range(4):
+    values = [normalized_stats[category][i] for category in categories]
+    radar_chart(axs[i], angles, values, colors[i], cluster_labels[i])
+    axs[i].set_title(f"{cluster_labels[i]}\n({int(cluster_stats_df.loc[cluster_labels[i], 'team_count'])} teams)",
+                    fontsize=14, fontweight='bold', pad=20)
+
+    # Add team names to each radar chart
+    teams_text = f"Teams: {cluster_stats_df.loc[cluster_labels[i], 'teams']}"
+    axs[i].text(0.5, -0.15, teams_text, transform=axs[i].transAxes,
+               ha='center', va='center', fontsize=10, wrap=True)
+
+plt.tight_layout()
+plt.subplots_adjust(wspace=0.4, hspace=0.6)
+plt.savefig('team_analysis/cluster_radar_charts.png', dpi=300, bbox_inches='tight')
 
 # Analyze upset patterns
 print("Analyzing upset patterns...")
@@ -405,4 +665,28 @@ with open('team_analysis/team_performance_summary.md', 'w') as f:
     f.write("Win percentage when team has advantage in each factor:\n\n")
     for factor, win_pct in factor_win_pcts.items():
         f.write(f"- {factor}: {win_pct:.1f}%\n")
+
+    f.write("\n## Team Playing Style Clusters\n\n")
+    f.write("Teams are clustered based on their playing style into four distinct categories:\n\n")
+    f.write("1. **Offensive Juggernauts**: Teams with high scoring, efficient shooting (especially from three), and often average or below-average defense\n")
+    f.write("2. **Defensive Stalwarts**: Teams with strong defensive metrics, lower pace, and efficient (though not necessarily high-volume) offense\n")
+    f.write("3. **Interior Presence**: Teams that excel in rebounding (particularly offensive rebounding) and score frequently near the basket\n")
+    f.write("4. **Balanced Teams**: Teams with a more balanced statistical profile, lacking extreme strengths or weaknesses\n\n")
+
+    f.write("### Cluster Details\n\n")
+    for cluster_name, row in cluster_stats_df.iterrows():
+        f.write(f"**{cluster_name}** ({int(row['team_count'])} teams)\n\n")
+        f.write(f"{row['description']}\n\n")
+        f.write(f"**Teams**: {row['teams']}\n\n")
+        f.write(f"**Key stats**:\n")
+        f.write(f"- Points: {row['PTS']:.1f}\n")
+        f.write(f"- Offensive Rating: {row['ORtg']:.1f}\n")
+        f.write(f"- Defensive Rating: {row['DRtg']:.1f}\n")
+        f.write(f"- Effective FG%: {row['eFGp']:.3f}\n")
+        f.write(f"- 3-Point Attempt Rate: {row['3PAr']:.3f}\n")
+        f.write(f"- Offensive Rebounding %: {row['ORBp']:.1f}\n")
+        f.write(f"- Defensive Rebounding %: {row['DRBp']:.1f}\n")
+        f.write(f"- Assist %: {row['ASTp']:.1f}\n")
+        f.write(f"- Block %: {row['BLKp']:.1f}\n")
+        f.write(f"- Steal %: {row['STLp']:.1f}\n\n")
 
