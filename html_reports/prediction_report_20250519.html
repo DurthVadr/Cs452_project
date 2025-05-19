@@ -1,0 +1,240 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>NBA Game Prediction - Enhanced Model Report</title>
+        
+        <style>
+            body { 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                line-height: 1.6; 
+                padding: 20px; 
+                max-width: 1200px; 
+                margin: 0 auto;
+                color: #333;
+                background-color: #f9f9f9;
+            }
+            h1, h2, h3, h4 { 
+                color: #2c3e50; 
+                font-weight: 600;
+            }
+            h1 { 
+                font-size: 2.5em; 
+                text-align: center;
+                margin-bottom: 0.5em;
+                padding-bottom: 0.3em;
+                border-bottom: 1px solid #eee;
+            }
+            h2 { 
+                font-size: 1.8em;
+                margin-top: 1.5em;
+                padding-bottom: 0.3em;
+                border-bottom: 1px solid #eee;
+            }
+            h3 { font-size: 1.4em; margin-top: 1.2em; }
+            h4 { font-size: 1.2em; margin-top: 1em; }
+            table { 
+                border-collapse: collapse; 
+                width: 100%; 
+                margin: 20px 0; 
+                box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+                background-color: white;
+            }
+            thead { background-color: #f8f9fa; }
+            th, td { 
+                border: 1px solid #ddd; 
+                padding: 12px; 
+                text-align: left; 
+            }
+            th { 
+                background-color: #2c3e50; 
+                color: white; 
+            }
+            tr:nth-child(even) { background-color: #f9f9f9; }
+            tr:hover { background-color: #f1f1f1; }
+            .plot-container { 
+                text-align: center;
+                margin: 20px 0;
+            }
+            img { 
+                max-width: 100%; 
+                height: auto;
+                box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+                border-radius: 5px;
+            }
+            .section {
+                margin-bottom: 30px;
+                padding: 20px;
+                background-color: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .metric-value {
+                font-weight: 600;
+                font-family: monospace;
+                padding: 2px 5px;
+                background-color: #f3f4f6;
+                border-radius: 4px;
+            }
+            .highlight-box {
+                border-left: 4px solid #3498db;
+                background-color: #f8f9fa;
+                padding: 15px;
+                margin: 20px 0;
+            }
+            .caption {
+                text-align: center;
+                font-style: italic;
+                color: #555;
+                margin: 10px 0 20px;
+            }
+        </style>
+    
+    </head>
+    <body>
+        <h1>NBA Game Prediction - Enhanced Model Report</h1>
+        <p style="text-align: center; font-style: italic;">Generated on: 2025-05-19 03:03:07</p>
+        
+        <div class="section">
+            <h2>Project Overview</h2>
+            <p>This project aims to predict NBA game outcomes with a focus on identifying upset victories 
+            where underdog teams win against favorites. We evaluated multiple machine learning models 
+            including Logistic Regression, Random Forest, Gradient Boosting, and an Ensemble approach.</p>
+            
+            <div class="highlight-box">
+                <h3>Key Objectives</h3>
+                <ul>
+                    <li>Develop models that accurately predict NBA game outcomes</li>
+                    <li>Identify factors that contribute to upset victories</li>
+                    <li>Compare different modeling approaches for performance</li>
+                    <li>Create a framework for evaluating model performance on upset predictions</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Model Performance Overview</h2>
+    
+                <div class="highlight-box">
+                    <h3>Key Findings</h3>
+                    <ul>
+                        <li>Best Overall Model: <span class="metric-value">logistic</span> 
+                            with accuracy of <span class="metric-value">0.6829</span></li>
+                        <li>Improvement over ELO baseline: <span class="metric-value">0.0244</span> 
+                            (2.44%)</li>
+                    </ul>
+                </div>
+                
+                <div class="plot-container">
+                    <h3>Model Accuracy Comparison</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Accuracy</th>
+                                <th>Improvement over ELO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+    
+                            <tr>
+                                <td>logistic</td>
+                                <td>0.6829</td>
+                                <td>0.0244 (2.44%)</td>
+                            </tr>
+        
+                            <tr>
+                                <td>random_forest</td>
+                                <td>0.6667</td>
+                                <td>0.0081 (0.81%)</td>
+                            </tr>
+        
+                            <tr>
+                                <td>elo</td>
+                                <td>0.6585</td>
+                                <td>0.0000 (0.00%)</td>
+                            </tr>
+        
+                            <tr>
+                                <td>gradient_boosting</td>
+                                <td>0.6545</td>
+                                <td>-0.0041 (-0.41%)</td>
+                            </tr>
+        
+                            <tr>
+                                <td>ensemble</td>
+                                <td>0.6423</td>
+                                <td>-0.0163 (-1.63%)</td>
+                            </tr>
+        
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Data Enhancement</h2>
+                <p>We applied Synthetic Minority Over-sampling Technique (SMOTE) to balance the training data
+                and improve model performance, especially for predicting upset games.</p>
+                
+                <h3>Class Distribution Before and After SMOTE</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Class</th>
+                            <th>Before SMOTE</th>
+                            <th>After SMOTE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    
+                        <tr>
+                            <td>0</td>
+                            <td>0.4065</td>
+                            <td>0.5000</td>
+                        </tr>
+        
+                        <tr>
+                            <td>1</td>
+                            <td>0.5935</td>
+                            <td>0.5000</td>
+                        </tr>
+        
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="section">
+                <h2>Feature Importance</h2>
+                <p>Understanding which features contribute most to prediction accuracy helps us interpret
+                the model and focus on the most relevant factors for NBA game outcomes.</p>
+                
+                <div class="plot-container">
+                    <img src="../plots/feature_importance/rf_feature_importance.png" alt="Feature Importance">
+                    <p class="caption">Feature importance from Random Forest model</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Confusion Matrices</h2>
+                <p>Confusion matrices help us understand where our models are making correct predictions
+                and where they're making mistakes.</p>
+                
+                <div class="plot-container">
+                    <img src="../plots/confusion_matrices/ensemble_confusion_matrix.png" alt="Ensemble Confusion Matrix">
+                    <p class="caption">Confusion matrix for the Ensemble model</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Conclusion</h2>
+                <p>The best performing model is the <span class="metric-value">{best_model}</span> with a test accuracy of 
+                <span class="metric-value">{best_accuracy:.4f}</span>, which represents an improvement of 
+                <span class="metric-value">{improvement:.4f}</span> ({improvement*100:.2f}%) over the baseline ELO model.</p>
+                
+                <p>Our approach of using SMOTE to balance the training data, combined with a focused feature set
+                and optimized model parameters, has resulted in improved prediction accuracy, especially for upset games.</p>
+            </div>
+        </body>
+        </html>
+    
